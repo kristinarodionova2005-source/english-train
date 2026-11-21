@@ -3,6 +3,8 @@
 <title>Английский тренажёр</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 /* Layout: one calm column, a tab per lesson, each exercise is a card that checks itself. */
 :root {
@@ -100,6 +102,11 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
 .place-badge.L { background: var(--accent); color: var(--accent-ink); }
 .place-badge.H { background: var(--chip); color: var(--ink); border: 1px solid var(--line); }
 .day-badge.kind { background: var(--bad-soft); color: var(--bad); }
+body.pdfmode { --bg: #ffffff; --card: #ffffff; --ink: #1d2340; --muted: #5d6585; --line: #dde2f0; --accent: #3b5bdb; --accent-ink: #ffffff; --accent-soft: #e6ebff;
+  --good: #167a52; --good-soft: #e1f5ec; --bad: #c2255c; --bad-soft: #fdeaf1; --chip: #eef1fa; background: #ffffff; color-scheme: light; }
+.pdfmode .actions .btn, .pdfmode .rec, .pdfmode .confetti, .pdfmode .hint { display: none !important; }
+.pdfmode .card { margin-bottom: 0; }
+.pagebar .actions { margin-top: 0; }
 .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
 [hidden]{display:none!important}
@@ -620,7 +627,7 @@ const MODULES = [
 
 /* ---------- helpers ---------- */
 const KEY = "english-trainer-v1";
-let store = { name: "", res: {} };
+let store = { name: "", res: {}, ans: {} };
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) store = Object.assign(store, s); } catch (e) {}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 const norm = s => String(s).toLowerCase().replace(/[’`]/g, "'").replace(/\s+/g, " ").replace(/[.!?]+$/, "").trim();
@@ -841,8 +848,30 @@ function celebrate(card) {
 /* ---------- screen ---------- */
 const view = document.getElementById("view"), tabs = document.getElementById("tabs");
 function resKey(id) { return store.res[id]; }
+const flushers = new Set();
+const CTL = "input[type=text],textarea,select,input[type=radio],input[type=checkbox]";
+function serialize(holder) {
+  return {
+    ctl: [...holder.querySelectorAll(CTL)].map(e => (e.type === "radio" || e.type === "checkbox") ? e.checked : e.value),
+    seg: [...holder.querySelectorAll(".seg")].map(b => b.classList.contains("on")),
+    bld: [...holder.querySelectorAll(".build")].map(b => [...b.children].map(c => c.textContent))
+  };
+}
+function restoreState(holder, st) {
+  if (!st) return;
+  [...holder.querySelectorAll(CTL)].forEach((e, i) => {
+    const v = (st.ctl || [])[i]; if (v === undefined) return;
+    if (e.type === "radio" || e.type === "checkbox") { if (v) { e.checked = true; e.dispatchEvent(new Event("change", { bubbles: true })); } }
+    else e.value = v;
+  });
+  [...holder.querySelectorAll(".seg")].forEach((b, i) => { if ((st.seg || [])[i]) b.click(); });
+  [...holder.querySelectorAll(".build")].forEach((b, i) => {
+    const row = b.closest(".item");
+    ((st.bld || [])[i] || []).forEach(w => { const chip = [...row.querySelectorAll(".bank .chip")].find(c => c.textContent === w); if (chip) chip.click(); });
+  });
+}
 function exCard(ex, day, kind) {
-  const card = h("section", { class: "card" });
+  const card = h("section", { class: "card ex" });
   const best = h("span", { class: "best" });
   const paint = () => { const r = resKey(ex.id); if (!r) { best.textContent = ""; return; } const f = r.t ? r.c / r.t : 0; best.textContent = (f >= 1 ? "★★★ " : f >= 0.75 ? "★★☆ " : f >= 0.5 ? "★☆☆ " : "☆☆☆ ") + r.c + " из " + r.t; };
   const pl = PLAN[ex.id] || [];
@@ -856,24 +885,38 @@ function exCard(ex, day, kind) {
   const out = h("span", { class: "foot", "aria-live": "polite" });
   const actions = h("div", { class: "actions" });
   card.append(head, insEl, holder, actions);
-  const build = () => {
+  let touched = false, tm = null;
+  const persist = () => {
+    if (!touched && !store.ans[ex.id]) return;
+    store.ans[ex.id] = { v: serialize(holder), done: !!card._done }; save();
+  };
+  const saveSoon = () => { touched = true; clearTimeout(tm); tm = setTimeout(persist, 250); };
+  ["input", "change", "click"].forEach(t => holder.addEventListener(t, saveSoon));
+  flushers.add(persist);
+  const build = fresh => {
     const r = R[ex.type](ex);
     holder.replaceChildren(...r.body); out.textContent = "";
+    card._done = false; card._last = null; card._chk = null;
     actions.replaceChildren();
+    let chk = null, again = null;
+    const runCheck = silent => {
+      const { c, t } = r.check(); card._last = { c, t }; card._done = true; touched = true;
+      const f = t ? c / t : 0;
+      out.textContent = `Результат: ${c} из ${t}. ` + (f >= 1 ? "Идеально!" : f >= 0.75 ? "Хорошо, посмотри на ошибки." : "Попробуй ещё раз: правильные ответы показаны под ошибками.");
+      if (f >= 1 && !silent) celebrate(card);
+      if (!silent) { const prev = store.res[ex.id]; if (!prev || c > prev.c) store.res[ex.id] = { c, t }; else store.res[ex.id].t = t; }
+      persist(); save(); paint(); stats();
+      chk.hidden = true; again.hidden = false;
+    };
     if (r.check) {
-      const chk = h("button", { type: "button", class: "btn" }, "Проверить");
-      chk.onclick = () => {
-        const { c, t } = r.check();
-        const f = t ? c / t : 0;
-        out.textContent = `Результат: ${c} из ${t}. ` + (f >= 1 ? "Идеально!" : f >= 0.75 ? "Хорошо, посмотри на ошибки." : "Попробуй ещё раз: правильные ответы показаны под ошибками.");
-        if (f >= 1) celebrate(card);
-        const prev = store.res[ex.id]; if (!prev || c > prev.c) store.res[ex.id] = { c, t }; else store.res[ex.id].t = t;
-        save(); paint(); stats();
-        chk.hidden = true; again.hidden = false;
-      };
-      const again = h("button", { type: "button", class: "btn ghost", hidden: true, onclick: build }, "Попробовать ещё раз");
+      chk = h("button", { type: "button", class: "btn" }, "Проверить"); card._chk = chk;
+      chk.onclick = () => runCheck(false);
+      again = h("button", { type: "button", class: "btn ghost", hidden: true, onclick: () => build(true) }, "Попробовать ещё раз");
       actions.append(chk, again, out);
     }
+    if (fresh) { delete store.ans[ex.id]; touched = false; save(); return; }
+    const saved = store.ans[ex.id];
+    if (saved) { restoreState(holder, saved.v); if (saved.done && r.check) runCheck(true); }
   };
   build(); paint();
   return card;
@@ -890,22 +933,87 @@ const refilter = () => { Object.keys(subSel).forEach(x => delete subSel[x]); sho
   daysEl.append(h("button", { type: "button", class: "dayb", "data-k": k, onclick: () => { daySel = k; store.day = k; save(); refilter(); } }, h("span", { class: "dl" }, label), h("span", { class: "dc" }))));
 [["all", "Всё"], ["L", "На уроке"], ["H", "Домашнее"]].forEach(([k, label]) =>
   placesEl.append(h("button", { type: "button", class: "dayb", "data-k": k, onclick: () => { placeSel = k; store.place = k; save(); refilter(); } }, h("span", { class: "dl" }, label), h("span", { class: "dc" }))));
+const cur = { m: null, g: "" };
 function syncTabs() { [...tabs.children].forEach(b => { b.hidden = !modVisible(MODULES.find(x => x.id === b.dataset.id)); }); }
 function show(id) {
+  flushers.forEach(f => f()); flushers.clear();
   let m = MODULES.find(x => x.id === id) || MODULES[0];
   if (!modVisible(m)) m = MODULES.find(modVisible) || m;
   syncTabs();
   [...tabs.children].forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === m.id)));
   const lead = h("section", { class: "card lead" }, h("h2", {}, m.title), h("p", {}, m.lead.text));
   if (m.lead.link) lead.append(h("div", {}, h("a", { class: "btn", href: m.lead.link, target: "_blank", rel: "noopener" }, m.lead.linkText + " ↗")));
-  const nodes = [lead]; let list;
+  const nodes = [lead]; let list; cur.m = m; cur.g = "";
   if (m.groups) {
-    const gs = m.groups.filter(grpOk); let gi = subSel[m.id] || 0; if (gi >= gs.length) gi = 0;
+    const gs = m.groups.filter(grpOk); let gi = subSel[m.id] || 0; if (gi >= gs.length) gi = 0; cur.g = gs[gi].tab;
     nodes.push(h("div", { class: "subtabs", role: "tablist" }, gs.map((g, i) => h("button", { type: "button", role: "tab", class: "sub", "aria-selected": String(i === gi), onclick: () => { subSel[m.id] = i; show(m.id); window.scrollTo(0, 0); } }, g.tab))));
     list = gs[gi].ex.filter(exOk);
   } else list = m.ex.filter(exOk);
   if (!list.length) nodes.push(h("div", { class: "card" }, "Для этого фильтра заданий нет."));
-  view.replaceChildren(...nodes, ...list.map(e => exCard(e, null, m.kind)));
+  view.replaceChildren(...nodes, ...(list.length ? [pageBar()] : []), ...list.map(e => exCard(e, null, m.kind)), ...(list.length ? [pageBar()] : []));
+}
+let lastPdf = null;
+const slug = t => String(t).toLowerCase().replace(/[^a-z0-9Ѐ-ӿ]+/g, "-").replace(/^-+|-+$/g, "");
+async function makePdf(dry) {
+  if (!window.html2canvas || !window.jspdf) throw new Error("не загрузились библиотеки, проверь интернет");
+  const cards = [...view.querySelectorAll(".card.ex")];
+  cards.forEach(c => { if (c._chk && !c._chk.hidden) c._chk.click(); });
+  const y0 = window.scrollY; window.scrollTo(0, 0);
+  document.body.classList.add("pdfmode");
+  await new Promise(r => setTimeout(r, 120));
+  let head = null;
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const PW = doc.internal.pageSize.getWidth(), PH = doc.internal.pageSize.getHeight(), M = 28, CW = PW - 2 * M, GAP = 10;
+    let y = M, sc = 0, st = 0;
+    cards.forEach(c => { if (c._last) { sc += c._last.c; st += c._last.t; } });
+    const dayName = daySel === "mon" ? "понедельник" : daySel === "thu" ? "четверг" : "все дни";
+    const placeName = placeSel === "L" ? "на уроке" : placeSel === "H" ? "домашнее" : "всё";
+    head = h("section", { class: "card" },
+      h("h2", {}, "Результаты: " + (store.name || "ученик")),
+      h("p", { class: "ins" }, cur.m.title + (cur.g ? " · " + cur.g : "") + " · " + dayName + " · " + placeName),
+      h("p", { class: "ins" }, new Date().toLocaleDateString("ru-RU") + (st ? " · итог страницы: " + sc + " из " + st : "")));
+    view.prepend(head);
+    for (const el of [head, ...cards]) {
+      const cv = await html2canvas(el, { scale: 1.6, backgroundColor: "#ffffff", useCORS: true, logging: false });
+      const k = CW / cv.width, hh = cv.height * k, avail = PH - 2 * M;
+      if (hh <= avail) {
+        if (y + hh > PH - M) { doc.addPage(); y = M; }
+        doc.addImage(cv.toDataURL("image/jpeg", 0.92), "JPEG", M, y, CW, hh); y += hh + GAP;
+      } else {
+        const seg = Math.floor(avail / k);
+        for (let top = 0; top < cv.height; top += seg) {
+          const part = document.createElement("canvas"); part.width = cv.width; part.height = Math.min(seg, cv.height - top);
+          part.getContext("2d").drawImage(cv, 0, top, cv.width, part.height, 0, 0, cv.width, part.height);
+          if (y > M) { doc.addPage(); y = M; }
+          doc.addImage(part.toDataURL("image/jpeg", 0.92), "JPEG", M, y, CW, part.height * k); y += part.height * k + GAP;
+        }
+      }
+    }
+    const name = "results_" + slug(store.name || "student") + "_" + slug(cur.m.id + (cur.g ? "-" + cur.g : "")) + "_" + daySel + "-" + placeSel + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
+    const blob = doc.output("blob");
+    lastPdf = { blob, name };
+    if (dry) return { size: blob.size, pages: doc.getNumberOfPages(), name, cards: cards.length };
+    doc.save(name);
+    return { size: blob.size, name };
+  } finally {
+    if (head) head.remove();
+    document.body.classList.remove("pdfmode"); window.scrollTo(0, y0);
+  }
+}
+function pageBar() {
+  const st = h("span", { class: "foot", "aria-live": "polite" });
+  const chk = h("button", { type: "button", class: "btn ghost", onclick: () => { [...view.querySelectorAll(".card.ex")].forEach(c => { if (c._chk && !c._chk.hidden) c._chk.click(); }); st.textContent = "Всё проверено."; } }, "Проверить всё на странице");
+  const pdf = h("button", { type: "button", class: "btn" }, "Скачать PDF этой страницы");
+  pdf.onclick = async () => {
+    pdf.disabled = true; st.textContent = "Готовлю PDF…";
+    try { await makePdf(); st.textContent = "PDF сохранён. Отправь файл учителю в Telegram (скрепка)."; }
+    catch (e) { st.textContent = "Не получилось создать PDF: " + (e && e.message ? e.message : e); }
+    pdf.disabled = false;
+  };
+  const tg = h("a", { class: "btn ghost", href: "https://t.me/krrodionovaa", target: "_blank", rel: "noopener" }, "Открыть Telegram учителя");
+  return h("div", { class: "card pagebar" }, h("div", { class: "actions" }, chk, pdf, tg, st));
 }
 function stats() {
   const all = MODULES.flatMap(exsOf).filter(scored);
@@ -960,8 +1068,10 @@ document.getElementById("mail").onclick = () => {
 const ask = document.getElementById("resetask");
 document.getElementById("reset").onclick = () => { ask.hidden = false; };
 document.getElementById("resetno").onclick = () => { ask.hidden = true; };
-document.getElementById("resetyes").onclick = () => { store.res = {}; save(); ask.hidden = true; show(location.hash.slice(1)); stats(); };
+document.getElementById("resetyes").onclick = () => { store.res = {}; store.ans = {}; save(); ask.hidden = true; show(location.hash.slice(1)); stats(); };
 
+window.addEventListener("pagehide", () => flushers.forEach(f => f()));
+document.addEventListener("visibilitychange", () => { if (document.hidden) flushers.forEach(f => f()); });
 stats();
 show(location.hash.slice(1));
 </script>
