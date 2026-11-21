@@ -95,6 +95,11 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
 .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 14px; }
 .confetti i { position: absolute; top: -14px; width: 8px; height: 12px; border-radius: 2px; animation: fall 1.3s ease-in forwards; }
 @keyframes fall { to { transform: translate(var(--dx), 460px) rotate(540deg); opacity: 0; } }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.place-badge { display: inline-block; font: 600 11px var(--f-body); letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 2px 8px; }
+.place-badge.L { background: var(--accent); color: var(--accent-ink); }
+.place-badge.H { background: var(--chip); color: var(--ink); border: 1px solid var(--line); }
+.day-badge.kind { background: var(--bad-soft); color: var(--bad); }
 .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
 [hidden]{display:none!important}
@@ -111,6 +116,7 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
     </div>
   </div>
   <div class="days" id="days" role="group" aria-label="День недели"></div>
+  <div class="days" id="places" role="group" aria-label="Урок или дом"></div>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div id="view"></div>
   <div class="card" id="summary">
@@ -271,8 +277,8 @@ const BANKS = { p1: "in · on · at", va3: "off · over · out · up · down · 
   p3: "for · at · to · of · in · on · with", p5: "on · in · to · through · next · towards · with" };
 const CH = "Выбери правильный вариант.";
 
-const MODULES = [
-  { ...OLD[0], day: "thu", kind: "аудирование" },
+const OLD2 = [
+  { ...OLD[0] },
   { id: "grammar", tab: "Grammar", title: "Времена",
     lead: { text: "Выбери тему сверху. В каждой теме свои упражнения, они проверяются сразу. В письменных заданиях возможны и другие верные варианты: сравни с образцом." },
     groups: [
@@ -544,7 +550,80 @@ const MODULES = [
     ] }
 ];
 
-MODULES.flatMap(exsOf).forEach(e => { if (BANKS[e.id]) e.box = BANKS[e.id]; });
+const byId2 = id => [...OLD, ...OLD2].flatMap(exsOf).find(e => e.id === id);
+const pick = (...ids) => ids.map(byId2);
+const PLAN = {
+  v0: ["thu", "L"], v1: ["thu", "L"], v2: ["thu", "L"], v3: ["thu", "H"], v4: ["thu", "H"], v5: ["thu", "H"], v7: ["thu", "H"], v8: ["thu", "H"],
+  x5: ["mon", "L"], x6: ["mon", "L"], x7: ["mon", "L"], pp4: ["mon", "L"], m1: ["mon", "H"], pp2: ["mon", "H"], pc2: ["mon", "H"], m2: ["mon", "H"], x9: ["mon", "H"],
+  x8: ["thu", "L"], m3: ["thu", "H"], m4: ["thu", "H"], f1: ["thu", "L"], f2: ["thu", "L"],
+  va1: ["mon", "L"], va2: ["mon", "H"], vb1: ["thu", "L"], vb2: ["thu", "H"], vb3: ["thu", "H"], x4: ["thu", "L"], x3: ["thu", "H"], vc1: ["thu", "H"], vc2: ["thu", "H"],
+  p1: ["mon", "L"], p3: ["mon", "H"], p5: ["mon", "H"], ar1: ["mon", "L"], ar2: ["mon", "H"], ar3: ["mon", "H"]
+};
+const m1 = mcqEx("m1", "Mixed tenses: choose", "Времена вперемешку: выбери подходящее по смыслу.", [
+  ["Every morning my brother ___ his bike to school.", ["rides", "is riding", "rode"], 0],
+  ["Look! The cat ___ on the roof.", ["sits", "is sitting", "sat"], 1],
+  ["We ___ to Italy three times.", ["went", "have been", "were going"], 1],
+  ["I ___ TV when the lights went out.", ["watched", "was watching", "have watched"], 1],
+  ["When we got to the station, the train ___.", ["left", "had left", "was leaving"], 1],
+  ["I ___ him last week.", ["have seen", "saw", "was seeing"], 1],
+  ["While we ___ in the park, it started to rain.", ["walked", "were walking", "have walked"], 1],
+  ["He ___ in London since 2019.", ["lives", "lived", "has lived"], 2],
+  ["Water ___ at 100 degrees.", ["boils", "is boiling", "boiled"], 0],
+  ["I couldn't open the door because I ___ my keys.", ["lost", "had lost", "have lost"], 1]]);
+const m2 = gapEx("m2", "Mixed tenses: verbs in brackets", "Впиши глагол в нужной форме. Время выбери сам.", [
+  ["She usually ___ (walk) to school, but today she is taking the bus.", "walks"],
+  ["At 8 o'clock last night I ___ (do) my homework.", "was doing"],
+  ["They ___ (already / leave) when we arrived.", "had already left"],
+  ["I ___ (never / be) to Paris.", "have never been"],
+  ["He ___ (break) his arm last year.", "broke"],
+  ["Be quiet! The baby ___ (sleep).", "is sleeping"],
+  ["We ___ (live) in this house since 2018.", "have lived"],
+  ["While I ___ (cook), the phone rang.", "was cooking"],
+  ["After she ___ (finish) her book, she went to bed.", "had finished", "finished"],
+  ["Ben ___ (not / do) his homework yet.", "hasn't done", "has not done"]]);
+const m3 = gapEx("m3", "Mixed tenses: a trip to the lake", "Впиши глагол в нужной форме.", [
+  ["Last weekend we ___ (go) to the lake with my cousins.", "went"],
+  ["We ___ (look forward) to it all week.", "were looking forward"],
+  ["When we ___ (get) there, it was already hot.", "got"],
+  ["My cousins ___ (already / put up) the tent.", "had already put up"],
+  ["While Dad ___ (swim), I made sandwiches.", "was swimming"],
+  ["Suddenly, it ___ (start) to rain.", "started"],
+  ["We ___ (not / bring) umbrellas, so we got wet.", "hadn't brought", "had not brought", "didn't bring", "did not bring"],
+  ["Now we are home and I ___ (write) this story.", "am writing"]]);
+const m4 = fixEx("m4", "Mixed tenses: find and fix", "Исправь предложение прямо в поле и перепиши его целиком.", [
+  ["I am living here since 2019.", "I have lived here since 2019.", "I've lived here since 2019."],
+  ["When I arrived, the film already started.", "When I arrived, the film had already started."],
+  ["He go to school by bus every day.", "He goes to school by bus every day."],
+  ["What do you do at the moment?", "What are you doing at the moment?"],
+  ["We seen this film yesterday.", "We saw this film yesterday."],
+  ["She has finished her homework yesterday.", "She finished her homework yesterday."]]);
+const MODULES = [
+  { ...OLD[0], kind: "аудирование", ex: pick("v0", "v1", "v2", "v3", "v4", "v5", "v7", "v8") },
+  { id: "grammar", tab: "Grammar", title: "Времена вперемешку",
+    lead: { text: "Здесь разные времена в одном задании: Present Simple и Continuous, Past Simple, Past Continuous, Past Perfect и Present Perfect. Время выбирай по смыслу предложения. Будущее и условные вынесены в отдельную тему." },
+    groups: [
+      { tab: "Choose", ex: [byId2("x5"), m1, byId2("pp2"), byId2("pc2")] },
+      { tab: "Fill in", ex: [m2, m3] },
+      { tab: "Write", ex: [byId2("x6"), byId2("x7"), byId2("pp4"), byId2("x9")] },
+      { tab: "Fix", ex: [byId2("x8"), m4] }
+    ] },
+  { id: "future", tab: "Future", title: "Будущее и условные: новая тема",
+    lead: { text: "Эту тему вы ещё не проходили, поэтому задания только для урока: разбираем вместе. Домашнее по ней не задаём." },
+    ex: pick("f1", "f2") },
+  { id: "vocab", tab: "Vocabulary", title: "Лексика из двух листов",
+    lead: { text: "Первый список: поход и щенок (set off, break down…). Второй список: день, когда всё пошло не так (in a hurry, over the moon…). Третья вкладка объединяет оба." },
+    groups: [
+      { tab: "Camping words", ex: pick("va1", "va2") },
+      { tab: "A day that went wrong", ex: pick("vb1", "vb2", "vb3") },
+      { tab: "Both lists", ex: pick("x4", "x3", "vc1", "vc2") }
+    ] },
+  { id: "prep", tab: "Prepositions", title: "Предлоги", lead: { text: "Время, глагол + предлог и предлоги в рассказе." }, ex: pick("p1", "p3", "p5") },
+  { id: "articles", tab: "Articles", title: "Артикли",
+    lead: { text: "a / an / the или без артикля. Первое упоминание: a. Повторное и единственное в своём роде: the. Общее понятие: без артикля." },
+    ex: pick("ar1", "ar2", "ar3") }
+];
+
+[...OLD2].flatMap(exsOf).forEach(e => { if (BANKS[e.id]) e.box = BANKS[e.id]; });
 
 /* ---------- helpers ---------- */
 const KEY = "english-trainer-v1";
@@ -773,9 +852,12 @@ function exCard(ex, day, kind) {
   const card = h("section", { class: "card" });
   const best = h("span", { class: "best" });
   const paint = () => { const r = resKey(ex.id); if (!r) { best.textContent = ""; return; } const f = r.t ? r.c / r.t : 0; best.textContent = (f >= 1 ? "★★★ " : f >= 0.75 ? "★★☆ " : f >= 0.5 ? "★☆☆ " : "☆☆☆ ") + r.c + " из " + r.t; };
-  const dayTxt = day === "mon" ? "Пн" : day === "thu" ? "Чт" : "";
-  const badge = dayTxt ? h("span", { class: "day-badge " + day }, dayTxt + (kind ? " · " + kind : "")) : null;
-  const head = h("div", { class: "ex-head" }, h("div", { class: "ex-title" }, badge, h("h3", {}, ex.title)), scored(ex) ? best : h("span", { class: "tag" }, "без баллов"));
+  const pl = PLAN[ex.id] || [];
+  const badges = h("div", { class: "badges" },
+    pl[0] ? h("span", { class: "day-badge " + pl[0] }, pl[0] === "mon" ? "Пн" : "Чт") : null,
+    pl[1] ? h("span", { class: "place-badge " + pl[1] }, pl[1] === "L" ? "На уроке" : "Дом") : null,
+    kind ? h("span", { class: "day-badge kind" }, kind) : null);
+  const head = h("div", { class: "ex-head" }, h("div", { class: "ex-title" }, badges, h("h3", {}, ex.title)), scored(ex) ? best : h("span", { class: "tag" }, "без баллов"));
   const insEl = h("p", { class: "ins" }, ex.ins);
   const holder = h("div");
   const out = h("span", { class: "foot", "aria-live": "polite" });
@@ -804,17 +886,17 @@ function exCard(ex, day, kind) {
   return card;
 }
 let daySel = (store.day === "mon" || store.day === "thu") ? store.day : "all";
-const DAY_OF = {};
-MODULES.forEach(m => (m.groups || [m]).forEach(g => g.ex.forEach(e => { DAY_OF[e.id] = g.day || m.day; })));
-const dayOk = d => daySel === "all" || d === daySel;
-const visGroups = m => m.groups.filter(g => dayOk(g.day || m.day));
-const modVisible = m => m.groups ? visGroups(m).length > 0 : dayOk(m.day);
+let placeSel = (store.place === "L" || store.place === "H") ? store.place : "all";
+const exOk = e => { const p = PLAN[e.id] || []; return (daySel === "all" || p[0] === daySel) && (placeSel === "all" || p[1] === placeSel); };
+const grpOk = g => g.ex.some(exOk);
+const modVisible = m => m.groups ? m.groups.some(grpOk) : m.ex.some(exOk);
 const subSel = {};
-const daysEl = document.getElementById("days");
-[["all", "Все"], ["mon", "Понедельник"], ["thu", "Четверг"]].forEach(([k, label]) =>
-  daysEl.append(h("button", { type: "button", class: "dayb", "data-k": k, onclick: () => {
-    daySel = k; store.day = k; save(); Object.keys(subSel).forEach(x => delete subSel[x]);
-    show(location.hash.slice(1)); stats(); } }, h("span", { class: "dl" }, label), h("span", { class: "dc" }))));
+const daysEl = document.getElementById("days"), placesEl = document.getElementById("places");
+const refilter = () => { Object.keys(subSel).forEach(x => delete subSel[x]); show(location.hash.slice(1)); stats(); };
+[["all", "Все дни"], ["mon", "Понедельник"], ["thu", "Четверг"]].forEach(([k, label]) =>
+  daysEl.append(h("button", { type: "button", class: "dayb", "data-k": k, onclick: () => { daySel = k; store.day = k; save(); refilter(); } }, h("span", { class: "dl" }, label), h("span", { class: "dc" }))));
+[["all", "Всё"], ["L", "На уроке"], ["H", "Домашнее"]].forEach(([k, label]) =>
+  placesEl.append(h("button", { type: "button", class: "dayb", "data-k": k, onclick: () => { placeSel = k; store.place = k; save(); refilter(); } }, h("span", { class: "dl" }, label), h("span", { class: "dc" }))));
 function syncTabs() { [...tabs.children].forEach(b => { b.hidden = !modVisible(MODULES.find(x => x.id === b.dataset.id)); }); }
 function show(id) {
   let m = MODULES.find(x => x.id === id) || MODULES[0];
@@ -822,15 +904,15 @@ function show(id) {
   syncTabs();
   [...tabs.children].forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === m.id)));
   const lead = h("section", { class: "card lead" }, h("h2", {}, m.title), h("p", {}, m.lead.text));
-  if (m.kind) lead.prepend(h("span", { class: "day-badge " + m.day }, (m.day === "thu" ? "Чт" : "Пн") + " · " + m.kind));
   if (m.lead.link) lead.append(h("div", {}, h("a", { class: "btn", href: m.lead.link, target: "_blank", rel: "noopener" }, m.lead.linkText + " ↗")));
-  const nodes = [lead]; let list, day = m.day;
+  const nodes = [lead]; let list;
   if (m.groups) {
-    const gs = visGroups(m); let gi = subSel[m.id] || 0; if (gi >= gs.length) gi = 0;
+    const gs = m.groups.filter(grpOk); let gi = subSel[m.id] || 0; if (gi >= gs.length) gi = 0;
     nodes.push(h("div", { class: "subtabs", role: "tablist" }, gs.map((g, i) => h("button", { type: "button", role: "tab", class: "sub", "aria-selected": String(i === gi), onclick: () => { subSel[m.id] = i; show(m.id); window.scrollTo(0, 0); } }, g.tab))));
-    list = gs[gi].ex; day = gs[gi].day || m.day;
-  } else list = m.ex;
-  view.replaceChildren(...nodes, ...list.map(e => exCard(e, day, m.kind)));
+    list = gs[gi].ex.filter(exOk);
+  } else list = m.ex.filter(exOk);
+  if (!list.length) nodes.push(h("div", { class: "card" }, "Для этого фильтра заданий нет."));
+  view.replaceChildren(...nodes, ...list.map(e => exCard(e, null, m.kind)));
 }
 function stats() {
   const all = MODULES.flatMap(exsOf).filter(scored);
@@ -842,9 +924,10 @@ function stats() {
   document.getElementById("mbar").setAttribute("aria-valuenow", pct);
   document.getElementById("mtxt").textContent = `Выполнено упражнений: ${done} из ${all.length}`;
   document.getElementById("mpts").textContent = `Баллы: ${pts} из ${max}`;
-  const cnt = { all: [done, all.length], mon: [0, 0], thu: [0, 0] };
-  all.forEach(e => { const d = DAY_OF[e.id]; if (cnt[d]) { cnt[d][1]++; if (store.res[e.id]) cnt[d][0]++; } });
+  const cnt = { all: [done, all.length], mon: [0, 0], thu: [0, 0], L: [0, 0], H: [0, 0] };
+  all.forEach(e => { const p = PLAN[e.id] || []; [p[0], p[1]].forEach(k => { if (cnt[k]) { cnt[k][1]++; if (store.res[e.id]) cnt[k][0]++; } }); });
   [...daysEl.children].forEach(b => { const k = b.dataset.k; b.querySelector(".dc").textContent = cnt[k][0] + "/" + cnt[k][1]; b.setAttribute("aria-pressed", String(k === daySel)); });
+  [...placesEl.children].forEach(b => { const k = b.dataset.k; b.querySelector(".dc").textContent = cnt[k][0] + "/" + cnt[k][1]; b.setAttribute("aria-pressed", String(k === placeSel)); });
   return { all, done, pts, max };
 }
 MODULES.forEach(m => tabs.append(h("button", { type: "button", role: "tab", class: "tab", "data-id": m.id, onclick: () => { location.hash = m.id; } }, m.tab)));
