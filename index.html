@@ -93,9 +93,11 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
   <div id="view"></div>
   <div class="card" id="summary">
     <h2>Результат для учителя</h2>
-    <p class="ins">Скопируй текст и отправь учителю в чат или открой готовое письмо. Голосовые из заданий speaking отправляй отдельно.</p>
+    <p class="ins">Нажми «Скачать результат», открой Telegram учителя и прикрепи файл (скрепка). Голосовые из заданий speaking отправляй так же.</p>
     <div class="actions">
-      <button class="btn" id="copy">Скопировать результат</button>
+      <button class="btn" id="dlres">Скачать результат (файл)</button>
+      <a class="btn" id="tglink" href="https://t.me/krrodionovaa" target="_blank" rel="noopener">Открыть Telegram учителя</a>
+      <button class="btn ghost" id="copy">Скопировать результат</button>
       <button class="btn ghost" id="mail">Открыть письмо с результатом</button>
       <button class="btn ghost" id="reset">Сбросить прогресс</button>
     </div>
@@ -379,7 +381,8 @@ function recorder(ex) {
   const stop = h("button", { type: "button", class: "btn", hidden: true }, "■ Стоп");
   const audio = h("audio", { controls: "controls", hidden: true, class: "player" });
   const dl = h("a", { class: "btn ghost", hidden: true }, "Скачать запись");
-  const share = h("button", { type: "button", class: "btn ghost", hidden: true }, "Отправить учителю");
+  const share = h("button", { type: "button", class: "btn ghost", hidden: true }, "Поделиться файлом");
+  const tg = h("a", { class: "btn", href: "https://t.me/krrodionovaa", target: "_blank", rel: "noopener", hidden: true }, "Открыть Telegram учителя");
   let mr = null, stream = null, chunks = [], timer = null, t0 = 0, blob = null, fname = "";
   const mk = () => new File([blob], fname, { type: blob.type });
   rec.onclick = async () => {
@@ -396,18 +399,18 @@ function recorder(ex) {
       fname = "speaking-" + ex.id + "-" + (store.name || "student").replace(/[^A-Za-z0-9Ѐ-ӿ]+/g, "_") + "." + ext;
       if (audio.src) URL.revokeObjectURL(audio.src);
       audio.src = URL.createObjectURL(blob); dl.href = audio.src; dl.download = fname;
-      audio.hidden = false; dl.hidden = false;
+      audio.hidden = false; dl.hidden = false; tg.hidden = false;
       let can = false; try { can = !!(navigator.canShare && navigator.canShare({ files: [mk()] })); } catch (e) {}
       share.hidden = !can;
       rec.hidden = false; rec.textContent = "● Записать заново"; stop.hidden = true;
-      status.textContent = "Готово. Прослушай и отправь учителю: запись хранится, пока открыта страница.";
+      status.textContent = "Готово. 1) Нажми «Скачать запись». 2) Открой Telegram учителя и прикрепи файл (скрепка). Запись хранится, пока открыта страница.";
     };
     mr.start(); t0 = Date.now(); rec.hidden = true; stop.hidden = false;
     timer = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); status.textContent = "Идёт запись " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }, 500);
   };
   stop.onclick = () => { if (mr && mr.state !== "inactive") mr.stop(); };
-  share.onclick = async () => { try { await navigator.share({ files: [mk()], title: "Speaking" }); } catch (e) {} };
-  return h("div", { class: "rec" }, h("div", { class: "actions" }, rec, stop, dl, share), audio, status);
+  share.onclick = async () => { try { await navigator.share({ files: [mk()] }); } catch (e) {} };
+  return h("div", { class: "rec" }, h("div", { class: "actions" }, rec, stop, dl, tg, share), audio, status);
 }
 R.speak = function (ex) {
   const o = R.open(ex);
@@ -479,6 +482,16 @@ function summaryText() {
   MODULES.forEach(m => { lines.push(m.title + ":"); m.ex.filter(scored).forEach(e => { const r = store.res[e.id]; lines.push(`  ${e.title}: ${r ? r.c + "/" + r.t : "не выполнено"}`); }); });
   return lines.join("\n");
 }
+document.getElementById("dlres").onclick = () => {
+  const text = summaryText();
+  const safe = (store.name || "student").replace(/[^A-Za-z0-9\u0400-\u04ff]+/g, "_");
+  const b = new Blob(["\ufeff" + text], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b);
+  a.download = "results-" + safe + "-" + new Date().toISOString().slice(0, 10) + ".txt";
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  const ta = document.getElementById("sumtext"); ta.value = text; document.getElementById("sumbox").hidden = false;
+};
 document.getElementById("copy").onclick = () => {
   const text = summaryText();
   const box = document.getElementById("sumbox"), ta = document.getElementById("sumtext");
