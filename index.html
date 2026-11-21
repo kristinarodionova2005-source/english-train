@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Английский тренажёр</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: one calm column, a tab per lesson, each exercise is a card that checks itself. */
+:root {
+  --bg: #f3f5fb; --card: #ffffff; --ink: #1d2340; --muted: #5d6585; --line: #dde2f0;
+  --accent: #3b5bdb; --accent-ink: #ffffff; --accent-soft: #e6ebff;
+  --good: #167a52; --good-soft: #e1f5ec; --bad: #c2255c; --bad-soft: #fdeaf1; --chip: #eef1fa;
+  --f-head: "Space Grotesk", system-ui, sans-serif; --f-body: "Inter", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12162b; --card: #1a2040; --ink: #e8ebff; --muted: #a2abd0; --line: #2d3560;
+  --accent: #8ea2ff; --accent-ink: #10142b; --accent-soft: #252d5c;
+  --good: #5fd9a2; --good-soft: #17382f; --bad: #ff7fa6; --bad-soft: #43203a; --chip: #242b52; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12162b; --card: #1a2040; --ink: #e8ebff; --muted: #a2abd0; --line: #2d3560;
+  --accent: #8ea2ff; --accent-ink: #10142b; --accent-soft: #252d5c;
+  --good: #5fd9a2; --good-soft: #17382f; --bad: #ff7fa6; --bad-soft: #43203a; --chip: #242b52; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--f-body); }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 22px 60px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-head); margin: 0; text-wrap: balance; }
+h1 { font-size: 26px; line-height: 1.2; }
+h2 { font-size: 20px; line-height: 1.3; }
+.top { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+.who { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+.who input { min-width: 0; flex: 1 1 140px; max-width: 240px; }
+input[type=text], textarea, select { font: inherit; color: var(--ink); background: var(--card); border: 1.5px solid var(--line);
+  border-radius: 8px; padding: 6px 10px; }
+input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.meter { background: var(--line); border-radius: 99px; height: 9px; overflow: hidden; }
+.meter > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .35s; }
+.meter-label { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 18px; }
+.tab { font: 600 14px var(--f-body); background: var(--chip); color: var(--ink); border: 0; border-radius: 99px; padding: 8px 16px; cursor: pointer; }
+.tab[aria-selected=true] { background: var(--accent); color: var(--accent-ink); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+.lead { display: flex; flex-direction: column; gap: 10px; }
+.lead p { margin: 0; color: var(--muted); }
+.btn { font: 600 14px var(--f-body); background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 9px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+.btn.ghost { background: var(--chip); color: var(--ink); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.ex-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ex-head .tag { font-size: 12px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.ex-head .best { font-size: 13px; color: var(--good); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ins { color: var(--muted); font-size: 13.5px; margin: 4px 0 12px; }
+.item { padding: 9px 10px; border-radius: 10px; border: 1.5px solid transparent; margin-bottom: 4px; min-width: 0; }
+.item .q { display: block; margin-bottom: 6px; }
+.item.ok { background: var(--good-soft); border-color: var(--good); }
+.item.bad { background: var(--bad-soft); border-color: var(--bad); }
+.note { display: block; font-size: 13px; margin-top: 4px; color: var(--bad); font-weight: 500; overflow-wrap: anywhere; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { display: inline-flex; align-items: center; gap: 6px; background: var(--chip); border-radius: 8px; padding: 5px 11px; cursor: pointer; font-size: 14px; border: 1.5px solid transparent; }
+.opt input { accent-color: var(--accent); }
+.opt.on { border-color: var(--accent); background: var(--accent-soft); }
+.seg { font: 600 13px var(--f-body); border: 1.5px solid var(--line); background: var(--card); color: var(--ink); padding: 5px 16px; border-radius: 8px; cursor: pointer; }
+.seg.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.gapin { width: 9.5em; max-width: 100%; margin: 0 4px; }
+.gapin.wide { width: 100%; margin: 6px 0 0; display: block; }
+.box { background: var(--chip); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-bottom: 10px; font-weight: 500; overflow-wrap: anywhere; }
+.build { min-height: 44px; border: 1.5px dashed var(--line); border-radius: 10px; padding: 6px; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.bank { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 14px var(--f-body); background: var(--chip); color: var(--ink); border: 1.5px solid var(--line); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+.build .chip { background: var(--accent-soft); border-color: var(--accent); }
+textarea { width: 100%; min-height: 96px; resize: vertical; }
+.model { margin-top: 10px; padding: 12px; border-radius: 10px; background: var(--good-soft); border: 1.5px solid var(--good); font-size: 14px; }
+.model b { display: block; margin-bottom: 4px; }
+.sumbox { margin-top: 12px; }
+.sumbox textarea { min-height: 150px; font-size: 13px; }
+.rec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.player { width: 100%; margin-top: 10px; }
+.foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
+[hidden]{display:none!important}
+</style>
+
+</head><body>
+<div class="wrap">
+  <div class="top">
+    <h1>Английский тренажёр</h1>
+    <div class="who"><label for="name">Имя:</label><input id="name" type="text" placeholder="Варя" autocomplete="off"></div>
+    <div>
+      <div class="meter" role="progressbar" aria-label="Прогресс" aria-valuemin="0" aria-valuemax="100" id="mbar"><i id="mfill"></i></div>
+      <div class="meter-label"><span id="mtxt"></span><span id="mpts"></span></div>
+    </div>
+  </div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="view"></div>
+  <div class="card" id="summary">
+    <h2>Результат для учителя</h2>
+    <p class="ins">Скопируй текст и отправь учителю в чат или открой готовое письмо. Голосовые из заданий speaking отправляй отдельно.</p>
+    <div class="actions">
+      <button class="btn" id="copy">Скопировать результат</button>
+      <button class="btn ghost" id="mail">Открыть письмо с результатом</button>
+      <button class="btn ghost" id="reset">Сбросить прогресс</button>
+    </div>
+    <div class="sumbox" id="sumbox" hidden><textarea id="sumtext" readonly aria-label="Текст результата"></textarea></div>
+    <div class="foot" id="resetask" hidden><span>Весь прогресс будет удалён.</span>
+      <button class="btn" id="resetyes">Да, сбросить</button><button class="btn ghost" id="resetno">Отмена</button></div>
+  </div>
+</div>
+
+<script>
+const VIDEO_URL = "https://learnenglish.britishcouncil.org/general-english/video-series/starting-out/episode-15-there-campsite";
+const MODULES = [
+  { id: "video", tab: "Видео", title: "Is there a campsite?",
+    lead: { text: "British Council, Starting Out, Episode 15. Посмотри видео два раза: сначала без остановок, потом ещё раз с текстом (под видео на странице есть Transcript).", link: VIDEO_URL, linkText: "Открыть видео" },
+    ex: [
+    { id: "v0", type: "open", title: "Before you watch", ins: "Ответь письменно или вслух (2–3 предложения).",
+      items: [{ q: "Do you like camping? Why / why not?" }, { q: "What does a good campsite have?" }, { q: "Do you prefer tents or hotels on holiday?" }],
+      model: "I like camping because I love nature. A good campsite has a shop, showers and a swimming pool. I prefer hotels because they are more comfortable." },
+    { id: "v1", type: "tf", title: "True or false?", ins: "Смотри видео и выбери True или False.",
+      items: [
+        { q: "Sammy wants to take Julia to his favourite campsite.", a: true },
+        { q: "Julia loves camping.", a: false },
+        { q: "The campsite has a big swimming pool.", a: true },
+        { q: "The campsite has a ski slope.", a: false },
+        { q: "Julia hates tents.", a: true },
+        { q: "Sammy says there are wooden huts at the campsite.", a: true },
+        { q: "The campsite is still open.", a: false },
+        { q: "At the end, Julia suggests finding a hotel.", a: true }] },
+    { id: "v2", type: "tick", title: "What does the campsite have?", ins: "Отметь только то, что называет Sammy.",
+      items: [
+        { q: "a swimming pool", a: true }, { q: "a cinema", a: false }, { q: "a gym", a: true }, { q: "a ski slope", a: false },
+        { q: "a sauna", a: true }, { q: "a golf course", a: false }, { q: "a small lake", a: true }, { q: "a zoo", a: false },
+        { q: "a supermarket", a: true }, { q: "bike hire", a: true }, { q: "a jacuzzi", a: true }, { q: "a library", a: false }] },
+    { id: "v3", type: "mcq", title: "Watch again: choose the answer", ins: "Выбери один вариант.",
+      items: [
+        { q: "Where does Sammy want to go?", o: ["to a campsite", "to a beach", "to a hotel"], a: 0 },
+        { q: "How many tennis courts does the campsite have?", o: ["two", "four", "six"], a: 1 },
+        { q: "What does Julia prefer to camping?", o: ["hotels", "caravans", "friends' houses"], a: 0 },
+        { q: "What does Sammy offer instead of tents?", o: ["caravans", "wooden huts", "a big hotel"], a: 1 },
+        { q: "Who do Sammy and Julia ask about the campsite?", o: ["a woman in the street", "a policeman", "a hotel manager"], a: 0 },
+        { q: "What happened to the campsite?", o: ["It closed ten years ago.", "It is full today.", "It moved to another town."], a: 0 },
+        { q: "When was Sammy last at the campsite?", o: ["last year", "about ten years ago, on a school trip", "he has never been there"], a: 1 }] },
+    { id: "v4", type: "gap", title: "There is / There are", ins: "Впиши слово или слова: there is, there are, is, are.",
+      items: [
+        { q: "___ a big swimming pool at the campsite.", a: ["there is", "there's"] },
+        { q: "___ four tennis courts.", a: ["there are"] },
+        { q: "___ there any shops in the village?", a: ["are"] },
+        { q: "___ there a gym at the campsite?", a: ["is"] },
+        { q: "There ___ a bar with live music every night.", a: ["is", "'s"] },
+        { q: "There ___ any ski slopes. (no)", a: ["aren't", "are not"] }] },
+    { id: "v5", type: "order", title: "Make questions and sentences", ins: "Нажимай на слова по порядку, чтобы собрать предложение.",
+      items: [
+        { a: "Is there a swimming pool?" },
+        { a: "Are there any shops in the village?" },
+        { a: "How many tennis courts are there?" },
+        { a: "There is a small lake in the middle." },
+        { a: "There isn't a campsite here now." }] },
+    { id: "v6", type: "match", title: "Words from the video", ins: "Выбери значение для каждого слова.",
+      opts: ["a small simple building", "buildings and equipment for sports and free time", "to like one thing more than another", "a place where you put up tents", "not knowing where you are"],
+      items: [{ q: "hut", a: 0 }, { q: "facilities", a: 1 }, { q: "prefer", a: 2 }, { q: "campsite", a: 3 }, { q: "lost", a: 4 }] },
+    { id: "v7", type: "open", title: "Answer the questions", ins: "Ответь одним предложением, потом открой образец.",
+      items: [{ q: "Why doesn't Julia want to go to the campsite?" }, { q: "What does Sammy offer instead of tents?" },
+              { q: "What happened to the campsite?" }, { q: "What does Julia suggest at the end?" }],
+      model: "1. She doesn't like camping, she hates tents and prefers hotels.\n2. He offers small wooden huts with kitchens and bedrooms.\n3. It closed ten years ago and the town was built on it.\n4. She suggests finding a hotel." },
+    { id: "v8", type: "speak", title: "Speaking: your opinion", ins: "Скажи вслух за 1 минуту или запиши. Используй: I prefer… because…, In my opinion…, there is / there are.",
+      items: [{ q: "Camping is better than staying in a hotel. Do you agree? Give two reasons and one example from your life." }],
+      model: "In my opinion, camping is better because you can be close to nature and it is cheap. For example, last summer we were putting up a tent by a lake when it started to rain, but it was still fun. On the other hand, hotels are more comfortable." }
+    ] },
+  { id: "grammar", tab: "Grammar", title: "Past Continuous & mixed tenses",
+    lead: { text: "Упражнения проверяются сразу. Можно пробовать заново, лучший результат сохраняется. В письменных заданиях возможны и другие верные варианты: сравни с образцом." },
+    ex: [
+    { id: "x4", type: "mcq", title: "Choose the correct expression", ins: "Circle A or B.",
+      items: [
+        { q: "I woke up late, so I ___ my clothes and ran out of the house.", o: ["threw on", "turned out"], a: 0 },
+        { q: "She was ___ because she had broken the neighbour's window.", o: ["out of breath", "in trouble"], a: 1 },
+        { q: "Don't ___ — we have plenty of time.", o: ["rush", "cheer up"], a: 0 },
+        { q: "I couldn't ___ a good excuse.", o: ["come up with", "come across"], a: 0 },
+        { q: "It was raining, and ___, we had forgotten the umbrella.", o: ["it could be worse", "to make matters worse"], a: 1 },
+        { q: "Tom's ___ the holiday: he's already packed his bag.", o: ["fed up with", "looking forward to"], a: 1 }] },
+    { id: "x5", type: "mcq", title: "Choose the correct tense", ins: "Circle A, B or C. В предложениях 6 и 9 два пропуска: они разделены на a и b.",
+      items: [
+        { q: "What ___ at 8 o'clock last night?", o: ["did you do", "were you doing", "have you done"], a: 1 },
+        { q: "Look at those clouds! It ___ rain.", o: ["will", "is going to", "rains"], a: 1 },
+        { q: "I ___ camping, so I'm a bit nervous.", o: ["didn't go", "wasn't going", "have never been"], a: 2 },
+        { q: "\"I'm cold.\" \"I ___ close the window.\"", o: ["am going to", "will", "close"], a: 1 },
+        { q: "She ___ in the garden when it started to rain.", o: ["worked", "was working", "has worked"], a: 1 },
+        { q: "6a. My dad usually ___ to work.", o: ["drives", "is driving", "drive"], a: 0 },
+        { q: "6b. ...but today he ___ the bus.", o: ["takes", "is taking", "take"], a: 1 },
+        { q: "We ___ to the lake last summer.", o: ["have gone", "were going", "went"], a: 2 },
+        { q: "I ___ here since Monday.", o: ["am", "was", "have been"], a: 2 },
+        { q: "9a. While I ___, my brother was putting up the tent.", o: ["cooked", "was cooking", "cook"], a: 1 },
+        { q: "9b. While I was cooking, my brother ___ the tent.", o: ["put up", "was putting up", "puts up"], a: 1 },
+        { q: "\"Have you finished?\" \"Not yet. I ___ the tent.\"", o: ["still put up", "am still putting up", "was still putting up"], a: 1 }] },
+    { id: "x6", type: "write", title: "Write sentences in the Past Continuous", ins: "Use the words in the right order and add what is necessary. (+) утверждение, (–) отрицание, (?) вопрос. Напиши предложение целиком.",
+      items: [
+        { q: "at 7.30 yesterday / I / rush / to the bus stop (+)", a: ["At 7.30 yesterday I was rushing to the bus stop.", "I was rushing to the bus stop at 7.30 yesterday."] },
+        { q: "at noon / Tom / not / drive — he / wait / for the mechanic (–)", a: ["At noon Tom wasn't driving; he was waiting for the mechanic.", "At noon Tom was not driving; he was waiting for the mechanic.", "At noon Tom wasn't driving but he was waiting for the mechanic.", "At noon Tom wasn't driving, he was waiting for the mechanic.", "At noon Tom wasn't driving and he was waiting for the mechanic."] },
+        { q: "what / the children / do / when / the farmer / stop (?)", a: ["What were the children doing when the farmer stopped?"] },
+        { q: "you / look forward / to the trip / last week (?)", a: ["Were you looking forward to the trip last week?"] },
+        { q: "all evening / it / rain / and we / sit / in the tent (+)", a: ["It was raining all evening and we were sitting in the tent.", "All evening it was raining and we were sitting in the tent."] },
+        { q: "I / not / pay attention, so / I / not / hear / the question (–)", a: ["I wasn't paying attention, so I didn't hear the question.", "I was not paying attention, so I did not hear the question.", "I wasn't paying attention, so I did not hear the question.", "I was not paying attention, so I didn't hear the question."] }] },
+    { id: "x7", type: "write", title: "Join the ideas with when / while / as", ins: "Decide which action was longer and which one interrupted it. The order of the parts can change. Напиши предложение целиком.",
+      items: [
+        { q: "(while) we / drive / through the hills // the car / break down", a: ["While we were driving through the hills, the car broke down.", "The car broke down while we were driving through the hills."] },
+        { q: "(when) I / look for my keys // I / come across / an old photo", a: ["When I was looking for my keys, I came across an old photo.", "I was looking for my keys when I came across an old photo."] },
+        { q: "(as) Max / run / for the bus // he / drop / his phone", a: ["As Max was running for the bus, he dropped his phone.", "Max dropped his phone as he was running for the bus."] },
+        { q: "(while) Mum / cook // I / cheer / my brother up // Dad / put up / the tent", a: ["While Mum was cooking, I was cheering my brother up and Dad was putting up the tent.", "While Mum was cooking and I was cheering my brother up, Dad was putting up the tent.", "While Mum was cooking, I was cheering my brother up while Dad was putting up the tent."] },
+        { q: "(when) it / start to rain // we / have / lunch", a: ["When it started to rain, we were having lunch.", "We were having lunch when it started to rain."] }] },
+    { id: "x8", type: "fix", title: "Find and correct the mistakes", ins: "Исправь предложение прямо в поле и перепиши его целиком.",
+      items: [
+        { q: "While I walked home, I have seen an old friend.", a: ["While I was walking home, I saw an old friend."] },
+        { q: "I'm looking forward to see you.", a: ["I'm looking forward to seeing you.", "I am looking forward to seeing you."] },
+        { q: "We didn't went to the lake yesterday.", a: ["We didn't go to the lake yesterday."] },
+        { q: "What you were doing at eight o'clock last night?", a: ["What were you doing at eight o'clock last night?"] },
+        { q: "Look at the sky! It will rain.", a: ["Look at the sky! It's going to rain.", "Look at the sky! It is going to rain."] },
+        { q: "I have lost my keys yesterday.", a: ["I lost my keys yesterday."] },
+        { q: "He was knowing the answer.", a: ["He knew the answer."] },
+        { q: "They was waiting for a mechanic when it was starting to rain. (2 mistakes)", a: ["They were waiting for a mechanic when it started to rain."] },
+        { q: "I'm fed up of waiting.", a: ["I'm fed up with waiting.", "I am fed up with waiting."] }] },
+    { id: "x3", type: "gap", title: "Complete the sentences with the expressions from the box", ins: "Change the form if necessary. Some expressions are extra.",
+      box: "set off · break down · run out of · get lost · put up · make it · worth it · in a hurry · over the moon · out of breath · leave behind · turn out · cheer up · look forward to · in the middle of nowhere · come across",
+      items: [
+        { q: "We ___ at dawn yesterday to avoid the traffic.", a: ["set off"] },
+        { q: "I was ___ this morning, so I forgot my lunch.", a: ["in a hurry"] },
+        { q: "We ___ petrol while we were driving through the desert.", a: ["ran out of"] },
+        { q: "He's ___: he has just passed his driving test!", a: ["over the moon"] },
+        { q: "While we were hiking, we ___ an old friend of my mum's.", a: ["came across"] },
+        { q: "I'm ___ seeing you next weekend!", a: ["looking forward to"] },
+        { q: "The climb was exhausting, but it was ___.", a: ["worth it"] },
+        { q: "If our car ___ again, we'll call a mechanic.", a: ["breaks down"] },
+        { q: "I hope we ___ to the station before the train leaves.", a: ["make it"] },
+        { q: "Their house is ___, so there are no shops nearby.", a: ["in the middle of nowhere"] }] },
+    { id: "x9", type: "speak", title: "Speaking: Past Continuous", ins: "Ответь на вопросы полными предложениями в Past Continuous и запиши голосовое.",
+      items: [{ q: "What were you doing at 8 o'clock this morning?" }, { q: "What was your family doing yesterday at 7 p.m.?" },
+              { q: "What were you doing when your phone rang last time?" }, { q: "Were you looking forward to anything last week? What?" }],
+      model: "At 8 o'clock this morning I was having breakfast. Yesterday at 7 p.m. my mum was cooking dinner while my dad was watching TV. When my phone rang, I was doing my homework. Yes, I was looking forward to the weekend because we were going to the lake." }
+    ] }
+];
+
+/* ---------- helpers ---------- */
+const KEY = "english-trainer-v1";
+let store = { name: "", res: {} };
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) store = Object.assign(store, s); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+const norm = s => String(s).toLowerCase().replace(/[’`]/g, "'").replace(/\s+/g, " ").replace(/[.!?]+$/, "").trim();
+const normLoose = s => String(s).toLowerCase().replace(/[\u2019`]/g, "'").replace(/[^a-z0-9'\u0400-\u04ff ]+/g, " ").replace(/\s+/g, " ").trim();
+function h(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  for (const k in (props || {})) {
+    if (k === "class") n.className = props[k];
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), props[k]);
+    else if (props[k] !== false && props[k] != null) n.setAttribute(k, props[k]);
+  }
+  kids.flat().forEach(c => c != null && n.append(c.nodeType ? c : document.createTextNode(c)));
+  return n;
+}
+function mark(row, ok, note) {
+  row.classList.remove("ok", "bad"); row.classList.add(ok ? "ok" : "bad");
+  const old = row.querySelector(".note"); if (old) old.remove();
+  if (!ok && note) row.append(h("span", { class: "note" }, note));
+}
+let uid = 0;
+const scored = ex => ex.type !== "open" && ex.type !== "speak";
+const totalOf = ex => scored(ex) ? ex.items.length : 0;
+
+/* ---------- renderers: each returns { body, check() -> {c,t} } ---------- */
+const R = {
+  tf(ex) {
+    const rows = ex.items.map((it, i) => {
+      let val = null;
+      const bt = h("button", { type: "button", class: "seg" }, "True"), bf = h("button", { type: "button", class: "seg" }, "False");
+      const set = v => { val = v; bt.classList.toggle("on", v === true); bf.classList.toggle("on", v === false); };
+      bt.onclick = () => set(true); bf.onclick = () => set(false);
+      const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}. ${it.q}`), h("div", { class: "opts" }, bt, bf));
+      return { row, get: () => val, it };
+    });
+    return { body: rows.map(r => r.row), check: () => { let c = 0;
+      rows.forEach(r => { const ok = r.get() === r.it.a; if (ok) c++; mark(r.row, ok, "Правильно: " + (r.it.a ? "True" : "False")); });
+      return { c, t: rows.length }; } };
+  },
+  mcq(ex) {
+    const rows = ex.items.map((it, i) => {
+      const name = "q" + (++uid); let val = -1;
+      const opts = it.o.map((t, j) => {
+        const inp = h("input", { type: "radio", name }); const lab = h("label", { class: "opt" }, inp, t);
+        inp.onchange = () => { val = j; opts.forEach((o, k) => o.lab.classList.toggle("on", k === j)); };
+        return { lab };
+      });
+      const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}. ${it.q}`), h("div", { class: "opts" }, opts.map(o => o.lab)));
+      return { row, get: () => val, it };
+    });
+    return { body: rows.map(r => r.row), check: () => { let c = 0;
+      rows.forEach(r => { const ok = r.get() === r.it.a; if (ok) c++; mark(r.row, ok, "Правильно: " + r.it.o[r.it.a]); });
+      return { c, t: rows.length }; } };
+  },
+  tick(ex) {
+    const rows = ex.items.map(it => {
+      const inp = h("input", { type: "checkbox" }); const lab = h("label", { class: "opt" }, inp, it.q);
+      inp.onchange = () => lab.classList.toggle("on", inp.checked);
+      return { row: h("div", { class: "item" }, lab), get: () => inp.checked, it };
+    });
+    const grid = h("div", { class: "opts" }, rows.map(r => r.row));
+    return { body: [grid], check: () => { let c = 0;
+      rows.forEach(r => { const ok = r.get() === r.it.a; if (ok) c++; mark(r.row, ok, r.it.a ? "Нужно отметить" : "Лишнее"); });
+      return { c, t: rows.length }; } };
+  },
+  gap(ex) {
+    const rows = ex.items.map((it, i) => {
+      const inp = h("input", { type: "text", class: "gapin", autocomplete: "off", autocapitalize: "off", spellcheck: "false", "aria-label": "Ответ " + (i + 1) });
+      const parts = it.q.split("___");
+      const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}. `, parts[0], inp, parts[1] || ""));
+      return { row, inp, it };
+    });
+    const body = rows.map(r => r.row);
+    if (ex.box) body.unshift(h("div", { class: "box" }, ex.box));
+    return { body, check: () => { let c = 0;
+      rows.forEach(r => { const v = norm(r.inp.value); const ok = r.it.a.some(a => norm(a) === v); if (ok) c++; mark(r.row, ok, "Правильно: " + r.it.a[0]); });
+      return { c, t: rows.length }; } };
+  },
+  fix(ex) {
+    const rows = ex.items.map((it, i) => {
+      const inp = h("input", { type: "text", class: "gapin wide", value: it.q, autocomplete: "off", autocapitalize: "off", spellcheck: "false", "aria-label": "Исправление " + (i + 1) });
+      const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}. ${it.q}`), inp);
+      return { row, inp, it };
+    });
+    return { body: rows.map(r => r.row), check: () => { let c = 0;
+      rows.forEach(r => { const v = norm(r.inp.value); const ok = r.it.a.some(a => norm(a) === v); if (ok) c++;
+        mark(r.row, ok, "Правильно: " + r.it.a[0].charAt(0).toUpperCase() + r.it.a[0].slice(1) + "."); });
+      return { c, t: rows.length }; } };
+  },
+  order(ex) {
+    const rows = ex.items.map((it, i) => {
+      const words = it.a.split(" "); let bank = words.slice().reverse(); if (bank.join(" ") === it.a) bank.push(bank.shift());
+      let built = [];
+      const bankEl = h("div", { class: "bank" }), buildEl = h("div", { class: "build", "aria-label": "Твоё предложение" });
+      const draw = () => {
+        bankEl.replaceChildren(...bank.map((w, k) => h("button", { type: "button", class: "chip", onclick: () => { built.push(bank.splice(k, 1)[0]); draw(); } }, w)));
+        buildEl.replaceChildren(...built.map((w, k) => h("button", { type: "button", class: "chip", onclick: () => { bank.push(built.splice(k, 1)[0]); draw(); } }, w)));
+      };
+      draw();
+      const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}.`), buildEl, bankEl);
+      return { row, get: () => built.join(" "), it };
+    });
+    return { body: rows.map(r => r.row), check: () => { let c = 0;
+      rows.forEach(r => { const ok = norm(r.get()) === norm(r.it.a); if (ok) c++; mark(r.row, ok, "Правильно: " + r.it.a); });
+      return { c, t: rows.length }; } };
+  },
+  match(ex) {
+    const rows = ex.items.map((it, i) => {
+      const sel = h("select", { "aria-label": it.q }, h("option", { value: "-1" }, "выбери…"), ex.opts.map((o, j) => h("option", { value: String(j) }, o)));
+      const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}. `, h("b", {}, it.q)), sel);
+      return { row, sel, it };
+    });
+    return { body: rows.map(r => r.row), check: () => { let c = 0;
+      rows.forEach(r => { const ok = +r.sel.value === r.it.a; if (ok) c++; mark(r.row, ok, "Правильно: " + ex.opts[r.it.a]); });
+      return { c, t: rows.length }; } };
+  },
+  open(ex) {
+    const rows = ex.items.map((it, i) => h("div", { class: "item" }, h("span", { class: "q" }, `${ex.items.length > 1 ? (i + 1) + ". " : ""}${it.q}`)));
+    const ta = h("textarea", { "aria-label": "Твой ответ", placeholder: "Твой ответ…" });
+    const model = h("div", { class: "model", hidden: true }, h("b", {}, "Пример ответа"), h("span", { style: "white-space:pre-line" }, ex.model));
+    const btn = h("button", { type: "button", class: "btn ghost", onclick: () => { model.hidden = !model.hidden; btn.textContent = model.hidden ? "Показать пример" : "Скрыть пример"; } }, "Показать пример");
+    return { body: [...rows, ta, h("div", { class: "actions" }, btn), model], check: null };
+  }
+};
+
+/* ---------- write + speak ---------- */
+R.write = function (ex) {
+  const rows = ex.items.map((it, i) => {
+    const inp = h("input", { type: "text", class: "gapin wide", autocomplete: "off", autocapitalize: "off", spellcheck: "false", "aria-label": "Предложение " + (i + 1) });
+    const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}. ${it.q}`), inp);
+    return { row, inp, it };
+  });
+  return { body: rows.map(r => r.row), check: () => { let c = 0;
+    rows.forEach(r => { const v = normLoose(r.inp.value); const ok = r.it.a.some(a => normLoose(a) === v); if (ok) c++; mark(r.row, ok, "Образец: " + r.it.a[0]); });
+    return { c, t: rows.length }; } };
+};
+function recorder(ex) {
+  const status = h("span", { class: "foot", "aria-live": "polite" });
+  const rec = h("button", { type: "button", class: "btn" }, "● Записать голосовое");
+  const stop = h("button", { type: "button", class: "btn", hidden: true }, "■ Стоп");
+  const audio = h("audio", { controls: "controls", hidden: true, class: "player" });
+  const dl = h("a", { class: "btn ghost", hidden: true }, "Скачать запись");
+  const share = h("button", { type: "button", class: "btn ghost", hidden: true }, "Отправить учителю");
+  let mr = null, stream = null, chunks = [], timer = null, t0 = 0, blob = null, fname = "";
+  const mk = () => new File([blob], fname, { type: blob.type });
+  rec.onclick = async () => {
+    if (!window.MediaRecorder || !navigator.mediaDevices) { status.textContent = "Этот браузер не умеет записывать звук. Открой страницу в Chrome или Safari."; return; }
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e) { status.textContent = "Нет доступа к микрофону. Разреши микрофон в браузере и открой страницу в обычной вкладке."; return; }
+    const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find(t => MediaRecorder.isTypeSupported(t)) || "";
+    mr = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); chunks = [];
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => {
+      stream.getTracks().forEach(t => t.stop()); clearInterval(timer);
+      blob = new Blob(chunks, { type: mr.mimeType || mime || "audio/webm" });
+      const ext = blob.type.includes("mp4") ? "m4a" : "webm";
+      fname = "speaking-" + ex.id + "-" + (store.name || "student").replace(/[^A-Za-z0-9Ѐ-ӿ]+/g, "_") + "." + ext;
+      if (audio.src) URL.revokeObjectURL(audio.src);
+      audio.src = URL.createObjectURL(blob); dl.href = audio.src; dl.download = fname;
+      audio.hidden = false; dl.hidden = false;
+      let can = false; try { can = !!(navigator.canShare && navigator.canShare({ files: [mk()] })); } catch (e) {}
+      share.hidden = !can;
+      rec.hidden = false; rec.textContent = "● Записать заново"; stop.hidden = true;
+      status.textContent = "Готово. Прослушай и отправь учителю: запись хранится, пока открыта страница.";
+    };
+    mr.start(); t0 = Date.now(); rec.hidden = true; stop.hidden = false;
+    timer = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); status.textContent = "Идёт запись " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }, 500);
+  };
+  stop.onclick = () => { if (mr && mr.state !== "inactive") mr.stop(); };
+  share.onclick = async () => { try { await navigator.share({ files: [mk()], title: "Speaking" }); } catch (e) {} };
+  return h("div", { class: "rec" }, h("div", { class: "actions" }, rec, stop, dl, share), audio, status);
+}
+R.speak = function (ex) {
+  const o = R.open(ex);
+  return { body: [...o.body, recorder(ex)], check: null };
+};
+
+/* ---------- screen ---------- */
+const view = document.getElementById("view"), tabs = document.getElementById("tabs");
+function resKey(id) { return store.res[id]; }
+function exCard(ex) {
+  const card = h("section", { class: "card" });
+  const best = h("span", { class: "best" });
+  const paint = () => { const r = resKey(ex.id); best.textContent = r ? `Лучший результат: ${r.c} из ${r.t}` : ""; };
+  const head = h("div", { class: "ex-head" }, h("h3", {}, ex.title), scored(ex) ? best : h("span", { class: "tag" }, "без баллов"));
+  const insEl = h("p", { class: "ins" }, ex.ins);
+  const holder = h("div");
+  const out = h("span", { class: "foot", "aria-live": "polite" });
+  const actions = h("div", { class: "actions" });
+  card.append(head, insEl, holder, actions);
+  const build = () => {
+    const r = R[ex.type](ex);
+    holder.replaceChildren(...r.body); out.textContent = "";
+    actions.replaceChildren();
+    if (r.check) {
+      const chk = h("button", { type: "button", class: "btn" }, "Проверить");
+      chk.onclick = () => {
+        const { c, t } = r.check();
+        out.textContent = `Результат: ${c} из ${t}`;
+        const prev = store.res[ex.id]; if (!prev || c > prev.c) store.res[ex.id] = { c, t }; else store.res[ex.id].t = t;
+        save(); paint(); stats();
+        chk.hidden = true; again.hidden = false;
+      };
+      const again = h("button", { type: "button", class: "btn ghost", hidden: true, onclick: build }, "Попробовать ещё раз");
+      actions.append(chk, again, out);
+    }
+  };
+  build(); paint();
+  return card;
+}
+function show(id) {
+  const m = MODULES.find(x => x.id === id) || MODULES[0];
+  [...tabs.children].forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === m.id)));
+  const lead = h("section", { class: "card lead" }, h("h2", {}, m.title), h("p", {}, m.lead.text));
+  if (m.lead.link) lead.append(h("div", {}, h("a", { class: "btn", href: m.lead.link, target: "_blank", rel: "noopener" }, m.lead.linkText + " ↗")));
+  view.replaceChildren(lead, ...m.ex.map(exCard));
+}
+function stats() {
+  const all = MODULES.flatMap(m => m.ex).filter(scored);
+  const done = all.filter(e => store.res[e.id]).length;
+  const pts = all.reduce((s, e) => s + (store.res[e.id] ? store.res[e.id].c : 0), 0);
+  const max = all.reduce((s, e) => s + totalOf(e), 0);
+  const pct = all.length ? Math.round(100 * done / all.length) : 0;
+  document.getElementById("mfill").style.width = pct + "%";
+  document.getElementById("mbar").setAttribute("aria-valuenow", pct);
+  document.getElementById("mtxt").textContent = `Выполнено упражнений: ${done} из ${all.length}`;
+  document.getElementById("mpts").textContent = `Баллы: ${pts} из ${max}`;
+  return { all, done, pts, max };
+}
+MODULES.forEach(m => tabs.append(h("button", { type: "button", role: "tab", class: "tab", "data-id": m.id, onclick: () => { location.hash = m.id; } }, m.tab)));
+window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+const nameEl = document.getElementById("name");
+nameEl.value = store.name || ""; nameEl.addEventListener("input", () => { store.name = nameEl.value; save(); });
+
+const TEACHER_EMAIL = "kristina.rodionova.2005@gmail.com";
+function summaryText() {
+  const s = stats(); const d = new Date();
+  const lines = [`Результаты: ${store.name || "ученик"}, ${d.toLocaleDateString("ru-RU")}`, `Выполнено ${s.done} из ${s.all.length}, баллы ${s.pts} из ${s.max}`, ""];
+  MODULES.forEach(m => { lines.push(m.title + ":"); m.ex.filter(scored).forEach(e => { const r = store.res[e.id]; lines.push(`  ${e.title}: ${r ? r.c + "/" + r.t : "не выполнено"}`); }); });
+  return lines.join("\n");
+}
+document.getElementById("copy").onclick = () => {
+  const text = summaryText();
+  const box = document.getElementById("sumbox"), ta = document.getElementById("sumtext");
+  ta.value = text; box.hidden = false; ta.focus(); ta.select();
+  try { navigator.clipboard.writeText(text).then(() => { ta.blur(); document.getElementById("copy").textContent = "Скопировано"; }).catch(() => {}); } catch (e) {}
+};
+document.getElementById("mail").onclick = () => {
+  const text = summaryText(), ta = document.getElementById("sumtext");
+  ta.value = text; document.getElementById("sumbox").hidden = false;
+  location.href = "mailto:" + TEACHER_EMAIL + "?subject=" + encodeURIComponent("Результаты: " + (store.name || "ученик")) + "&body=" + encodeURIComponent(text);
+};
+const ask = document.getElementById("resetask");
+document.getElementById("reset").onclick = () => { ask.hidden = false; };
+document.getElementById("resetno").onclick = () => { ask.hidden = true; };
+document.getElementById("resetyes").onclick = () => { store.res = {}; save(); ask.hidden = true; show(location.hash.slice(1)); stats(); };
+
+stats();
+show(location.hash.slice(1));
+</script>
+
+</body></html>
