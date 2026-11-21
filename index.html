@@ -77,6 +77,24 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
 .subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
 .sub { font: 600 13px var(--f-body); background: var(--card); color: var(--ink); border: 1.5px solid var(--line); border-radius: 99px; padding: 6px 13px; cursor: pointer; }
 .sub[aria-selected=true] { background: var(--accent-soft); border-color: var(--accent); }
+.days { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
+.dayb { display: inline-flex; gap: 8px; align-items: center; font: 600 13px var(--f-body); background: var(--chip); color: var(--ink); border: 0; border-radius: 10px; padding: 7px 12px; cursor: pointer; }
+.dayb[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); }
+.dayb .dc { font-variant-numeric: tabular-nums; font-weight: 500; opacity: .85; }
+.day-badge { display: inline-block; font: 600 11px var(--f-body); letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 2px 8px; align-self: flex-start; }
+.day-badge.mon { background: var(--accent-soft); color: var(--ink); }
+.day-badge.thu { background: var(--good-soft); color: var(--good); }
+.ex-title { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.hint { margin: 0 0 8px; font-weight: 400; color: var(--muted); font-size: 13px; }
+.wbank { display: flex; flex-wrap: wrap; gap: 8px; }
+.wchip { font: 600 14px var(--f-body); background: var(--card); color: var(--ink); border: 1.5px solid var(--accent); border-radius: 10px; padding: 5px 12px; cursor: grab; }
+.wchip:active { cursor: grabbing; }
+.wchip.on { background: var(--accent); color: var(--accent-ink); }
+.gapin.drop { border-style: dashed; }
+.gapin.over { border-color: var(--accent); background: var(--accent-soft); }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 14px; }
+.confetti i { position: absolute; top: -14px; width: 8px; height: 12px; border-radius: 2px; animation: fall 1.3s ease-in forwards; }
+@keyframes fall { to { transform: translate(var(--dx), 460px) rotate(540deg); opacity: 0; } }
 .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
 [hidden]{display:none!important}
@@ -92,6 +110,7 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
       <div class="meter-label"><span id="mtxt"></span><span id="mpts"></span></div>
     </div>
   </div>
+  <div class="days" id="days" role="group" aria-label="День недели"></div>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div id="view"></div>
   <div class="card" id="summary">
@@ -248,14 +267,16 @@ const mcqEx = (id, title, ins, items) => ({ id, type: "mcq", title, ins, items: 
 const writeEx = (id, title, ins, items) => ({ id, type: "write", title, ins, items: items.map(([q, ...a]) => ({ q, a })) });
 const fixEx = (id, title, ins, items) => ({ id, type: "fix", title, ins, items: items.map(([q, ...a]) => ({ q, a })) });
 const matchEx = (id, title, ins, opts, items) => ({ id, type: "match", title, ins, opts, items: items.map(([q, a]) => ({ q, a })) });
+const BANKS = { p1: "in · on · at", va3: "off · over · out · up · down · along",
+  p3: "for · at · to · of · in · on · with", p5: "on · in · to · through · next · towards · with" };
 const CH = "Выбери правильный вариант.";
 
 const MODULES = [
-  OLD[0],
+  { ...OLD[0], day: "thu", kind: "аудирование" },
   { id: "grammar", tab: "Grammar", title: "Времена",
     lead: { text: "Выбери тему сверху. В каждой теме свои упражнения, они проверяются сразу. В письменных заданиях возможны и другие верные варианты: сравни с образцом." },
     groups: [
-    { tab: "Past Continuous", ex: [
+    { tab: "Past Continuous", day: "mon", ex: [
       byId("x6"), byId("x7"),
       gapEx("pc1", "Past Continuous: positive, negative, question", "Впиши глагол в нужной форме или was / were.", [
         ["At 9 p.m. yesterday Ben ___ (watch) a film.", "was watching"],
@@ -276,7 +297,7 @@ const MODULES = [
         ["They ___ football when it began to rain.", ["played", "were playing"], 1],
         ["He ___ his leg while he was skiing.", ["broke", "was breaking"], 0]]),
       byId("x9")] },
-    { tab: "Past Perfect", ex: [
+    { tab: "Past Perfect", day: "mon", ex: [
       gapEx("pp1", "Past Perfect: form", "Впиши глагол в Past Perfect (had + третья форма).", [
         ["When we arrived, the film ___ (already / start).", "had already started"],
         ["She ___ (not / eat) anything before the exam, so she was hungry.", "hadn't eaten", "had not eaten"],
@@ -304,7 +325,7 @@ const MODULES = [
         ["(by the time) we / arrive // the shop / close", "By the time we arrived, the shop had closed.", "The shop had closed by the time we arrived."],
         ["(before) she / call // I / already / leave", "Before she called, I had already left.", "I had already left before she called."],
         ["(when) I / get to the stop // the bus / go", "When I got to the stop, the bus had gone.", "The bus had gone when I got to the stop."]])] },
-    { tab: "Present Perfect", ex: [
+    { tab: "Present Perfect", day: "mon", ex: [
       gapEx("pr1", "Present Perfect or Past Simple?", "Впиши глагол в нужной форме.", [
         ["I ___ (never / ride) a horse.", "have never ridden"],
         ["We ___ (visit) Rome last summer.", "visited"],
@@ -326,7 +347,7 @@ const MODULES = [
         ["she / finish / her project / yet", "Has she finished her project yet?"],
         ["they / ever / see / a bear", "Have they ever seen a bear?"],
         ["your brother / already / eat", "Has your brother already eaten?"]])] },
-    { tab: "Future", ex: [
+    { tab: "Future", day: "thu", ex: [
       gapEx("f1", "will, be going to or Present Continuous?", "Впиши глагол в подходящей форме. Если возможны два варианта, подойдёт любой.", [
         ["Look at the sky! It ___ (rain).", "is going to rain"],
         ["\"I'm thirsty.\" \"I ___ (get) you some water.\"", "will get", "'ll get"],
@@ -343,7 +364,7 @@ const MODULES = [
         ["If we miss the bus, we ___ late.", ["will be", "are"], 0],
         ["We ___ a picnic if the weather is good.", ["have", "will have"], 1],
         ["When I ___ home, I will call you.", ["get", "will get"], 0]])] },
-    { tab: "Present", ex: [
+    { tab: "Present", day: "thu", ex: [
       gapEx("ps1", "Present Simple or Present Continuous?", "Впиши глагол в нужной форме.", [
         ["My dad usually ___ (drive) to work.", "drives"],
         ["Look! The kids ___ (play) in the garden.", "are playing"],
@@ -360,7 +381,7 @@ const MODULES = [
         ["This soup ___ delicious.", ["tastes", "is tasting"], 0],
         ["He ___ about his exam now.", ["thinks", "is thinking"], 1],
         ["I ___ what you mean.", ["don't understand", "am not understanding"], 0]])] },
-    { tab: "Mixed", ex: [
+    { tab: "Mixed", day: "thu", ex: [
       byId("x5"), byId("x8"),
       gapEx("mx1", "Mixed tenses: a message from the campsite", "Впиши глагол в нужной форме.", [
         ["I ___ (write) to you from our campsite right now.", "am writing"],
@@ -377,7 +398,7 @@ const MODULES = [
   { id: "vocab", tab: "Vocabulary", title: "Лексика из двух листов",
     lead: { text: "Первый список: поход и щенок (set off, break down…). Второй список: день, когда всё пошло не так (in a hurry, over the moon…). Третья вкладка объединяет оба." },
     groups: [
-    { tab: "Camping words", ex: [
+    { tab: "Camping words", day: "mon", ex: [
       matchEx("va1", "Expression and meaning", "Выбери значение.",
         ["to wait for something with pleasure", "very late, just before the deadline", "to begin a journey", "(of a car) to stop working", "very far from any town", "to stop a car at the side of the road", "to find a solution to a problem", "annoyed and bored with something"],
         [["to look forward to", 0], ["at the last minute", 1], ["to set off", 2], ["to break down", 3], ["in the middle of nowhere", 4], ["to pull over", 5], ["to sort out", 6], ["to be fed up with", 7]]),
@@ -401,7 +422,7 @@ const MODULES = [
         ["We ran ___ of petrol.", "out"],
         ["I get ___ well with my classmates.", "along"],
         ["Our car broke ___ in the middle of nowhere.", "down"]])] },
-    { tab: "A day that went wrong", ex: [
+    { tab: "A day that went wrong", day: "thu", ex: [
       matchEx("vb1", "Expression and meaning", "Выбери значение.",
         ["to move or do something very fast", "to take something quickly with your hand", "to put clothes on quickly", "completely wet", "breathing hard after running", "to meet someone by chance", "in a difficult situation, possibly facing punishment", "extremely happy"],
         [["to rush", 0], ["to grab", 1], ["to throw on", 2], ["soaking wet", 3], ["out of breath", 4], ["to come across", 5], ["in trouble", 6], ["over the moon", 7]]),
@@ -413,7 +434,7 @@ const MODULES = [
         ["Guess who I ___ at the cinema yesterday: my old teacher!", "came across"],
         ["Don't ___ me: I'm still thinking.", "rush"],
         ["I forgot my keys, and ___, it started to snow.", "to make matters worse", "make matters worse"],
-        ["Her friends tried to ___ her up after she failed the test.", "cheer"],
+        ["Her friends tried to ___ after she failed the test.", "cheer up"],
         ["The concert ___ to be much better than we expected.", "turned out"],
         ["He walked home in the rain and arrived ___.", "soaking wet"]],
         "over the moon · leave behind · out of breath · come up with · come across · rush · to make matters worse · cheer up · turn out · soaking wet · in trouble · grab"),
@@ -427,7 +448,7 @@ const MODULES = [
       matchEx("vb4", "Match the halves", "Выбери окончание предложения.",
         ["the moon when she got the news.", "behind at school.", "me up when I'm sad.", "a sandwich and ran.", "breath after the race.", "out fine in the end.", "worse, I lost my ticket.", "an old friend in the park."],
         [["I was so late that I grabbed …", 3], ["To make matters …", 6], ["She was over …", 0], ["I came across …", 7], ["He was out of …", 4], ["Everything turned …", 5], ["I left my notebook …", 1], ["My friends always cheer …", 2]])] },
-    { tab: "Both lists", ex: [
+    { tab: "Both lists", day: "thu", ex: [
       byId("x4"), byId("x3"),
       { id: "vc1", type: "speak", title: "Speaking: your opinion", ins: "Выбери одно утверждение и скажи вслух за 1 минуту. Используй 3 выражения из списков и запиши голосовое.",
         items: [{ q: "It's better to pack the day before than at the last minute." }, { q: "Everybody has a bad day sometimes. It's important to stay positive." }, { q: "Teenagers shouldn't travel without their parents." }],
@@ -436,7 +457,7 @@ const MODULES = [
         items: [{ q: "Last Saturday everything went wrong. My alarm clock didn't go off, so…" }],
         model: "…I woke up in a hurry and ran out of the house. While I was waiting for the bus, it started to rain, and I got soaking wet. When I arrived at school, I realised that I had left my homework behind. I couldn't come up with a good excuse, so I told the truth. My teacher wasn't angry, and in the end the day turned out fine." }] }
   ] },
-  { id: "prep", tab: "Prepositions", title: "Предлоги",
+  { id: "prep", tab: "Prepositions", day: "mon", title: "Предлоги",
     lead: { text: "Время, место, движение и глаголы с предлогами." },
     ex: [
       gapEx("p1", "Time: in, on, at", "Впиши in, on или at.", [
@@ -487,7 +508,7 @@ const MODULES = [
         ["We got along well ___ her grandson.", "with"],
         ["It was hard, but it was worth it ___ the end.", "in"]])
     ] },
-  { id: "articles", tab: "Articles", title: "Артикли",
+  { id: "articles", tab: "Articles", day: "thu", title: "Артикли",
     lead: { text: "a / an / the или без артикля. Правило: первое упоминание, a; повторное и единственное в своём роде, the; общее понятие, без артикля." },
     ex: [
       mcqEx("ar1", "a, an, the or no article?", CH, [
@@ -522,6 +543,8 @@ const MODULES = [
         ["We live in ___ small flat.", ["a", "an", "the"], 0]])
     ] }
 ];
+
+MODULES.flatMap(exsOf).forEach(e => { if (BANKS[e.id]) e.box = BANKS[e.id]; });
 
 /* ---------- helpers ---------- */
 const KEY = "english-trainer-v1";
@@ -703,14 +726,56 @@ R.speak = function (ex) {
   return { body: [...o.body, recorder(ex)], check: null };
 };
 
+/* ---------- drag and drop gaps ---------- */
+R.gap = function (ex) {
+  let armed = null; const chips = [];
+  const setArmed = w => { armed = w; chips.forEach(c => c.el.classList.toggle("on", c.w === w)); };
+  const put = (inp, w) => { inp.value = w; inp.focus(); inp.select(); };
+  const rows = ex.items.map((it, i) => {
+    const inp = h("input", { type: "text", class: "gapin" + (ex.box ? " drop" : ""), autocomplete: "off", autocapitalize: "off", spellcheck: "false", "aria-label": "Ответ " + (i + 1) });
+    if (ex.box) {
+      inp.addEventListener("dragover", e => { e.preventDefault(); inp.classList.add("over"); });
+      inp.addEventListener("dragleave", () => inp.classList.remove("over"));
+      inp.addEventListener("drop", e => { e.preventDefault(); inp.classList.remove("over"); const w = e.dataTransfer.getData("text/plain"); if (w) put(inp, w); });
+      inp.addEventListener("click", () => { if (armed) { const w = armed; setArmed(null); put(inp, w); } });
+    }
+    const parts = it.q.split("___");
+    const row = h("div", { class: "item" }, h("span", { class: "q" }, `${i + 1}. `, parts[0], inp, parts[1] || ""));
+    return { row, inp, it };
+  });
+  const body = rows.map(r => r.row);
+  if (ex.box) {
+    const bank = h("div", { class: "wbank" }, ex.box.split(" · ").map(w => {
+      const el = h("button", { type: "button", class: "wchip", draggable: "true" }, w);
+      el.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", w); e.dataTransfer.effectAllowed = "copy"; });
+      el.addEventListener("click", () => setArmed(armed === w ? null : w));
+      chips.push({ el, w }); return el;
+    }));
+    body.unshift(h("div", { class: "box" }, h("p", { class: "hint" }, "Перетащи слово в пропуск или нажми на слово, а потом на пропуск. Форму слова можно исправить прямо в поле."), bank));
+  }
+  return { body, check: () => { let c = 0;
+    rows.forEach(r => { const v = norm(r.inp.value); const ok = r.it.a.some(a => norm(a) === v); if (ok) c++; mark(r.row, ok, "Правильно: " + r.it.a[0]); });
+    return { c, t: rows.length }; } };
+};
+function celebrate(card) {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  card.style.position = "relative";
+  const cols = ["var(--accent)", "var(--good)", "var(--bad)", "#e0a800"];
+  const box = h("div", { class: "confetti", "aria-hidden": "true" });
+  for (let i = 0; i < 30; i++) box.append(h("i", { style: "left:" + Math.round(Math.random() * 100) + "%;background:" + cols[i % 4] + ";animation-delay:" + (Math.random() * 0.4).toFixed(2) + "s;--dx:" + Math.round((Math.random() - 0.5) * 140) + "px" }));
+  card.append(box); setTimeout(() => box.remove(), 1800);
+}
+
 /* ---------- screen ---------- */
 const view = document.getElementById("view"), tabs = document.getElementById("tabs");
 function resKey(id) { return store.res[id]; }
-function exCard(ex) {
+function exCard(ex, day, kind) {
   const card = h("section", { class: "card" });
   const best = h("span", { class: "best" });
-  const paint = () => { const r = resKey(ex.id); best.textContent = r ? `Лучший результат: ${r.c} из ${r.t}` : ""; };
-  const head = h("div", { class: "ex-head" }, h("h3", {}, ex.title), scored(ex) ? best : h("span", { class: "tag" }, "без баллов"));
+  const paint = () => { const r = resKey(ex.id); if (!r) { best.textContent = ""; return; } const f = r.t ? r.c / r.t : 0; best.textContent = (f >= 1 ? "★★★ " : f >= 0.75 ? "★★☆ " : f >= 0.5 ? "★☆☆ " : "☆☆☆ ") + r.c + " из " + r.t; };
+  const dayTxt = day === "mon" ? "Пн" : day === "thu" ? "Чт" : "";
+  const badge = dayTxt ? h("span", { class: "day-badge " + day }, dayTxt + (kind ? " · " + kind : "")) : null;
+  const head = h("div", { class: "ex-head" }, h("div", { class: "ex-title" }, badge, h("h3", {}, ex.title)), scored(ex) ? best : h("span", { class: "tag" }, "без баллов"));
   const insEl = h("p", { class: "ins" }, ex.ins);
   const holder = h("div");
   const out = h("span", { class: "foot", "aria-live": "polite" });
@@ -724,7 +789,9 @@ function exCard(ex) {
       const chk = h("button", { type: "button", class: "btn" }, "Проверить");
       chk.onclick = () => {
         const { c, t } = r.check();
-        out.textContent = `Результат: ${c} из ${t}`;
+        const f = t ? c / t : 0;
+        out.textContent = `Результат: ${c} из ${t}. ` + (f >= 1 ? "Идеально!" : f >= 0.75 ? "Хорошо, посмотри на ошибки." : "Попробуй ещё раз: правильные ответы показаны под ошибками.");
+        if (f >= 1) celebrate(card);
         const prev = store.res[ex.id]; if (!prev || c > prev.c) store.res[ex.id] = { c, t }; else store.res[ex.id].t = t;
         save(); paint(); stats();
         chk.hidden = true; again.hidden = false;
@@ -736,19 +803,34 @@ function exCard(ex) {
   build(); paint();
   return card;
 }
+let daySel = (store.day === "mon" || store.day === "thu") ? store.day : "all";
+const DAY_OF = {};
+MODULES.forEach(m => (m.groups || [m]).forEach(g => g.ex.forEach(e => { DAY_OF[e.id] = g.day || m.day; })));
+const dayOk = d => daySel === "all" || d === daySel;
+const visGroups = m => m.groups.filter(g => dayOk(g.day || m.day));
+const modVisible = m => m.groups ? visGroups(m).length > 0 : dayOk(m.day);
 const subSel = {};
+const daysEl = document.getElementById("days");
+[["all", "Все"], ["mon", "Понедельник"], ["thu", "Четверг"]].forEach(([k, label]) =>
+  daysEl.append(h("button", { type: "button", class: "dayb", "data-k": k, onclick: () => {
+    daySel = k; store.day = k; save(); Object.keys(subSel).forEach(x => delete subSel[x]);
+    show(location.hash.slice(1)); stats(); } }, h("span", { class: "dl" }, label), h("span", { class: "dc" }))));
+function syncTabs() { [...tabs.children].forEach(b => { b.hidden = !modVisible(MODULES.find(x => x.id === b.dataset.id)); }); }
 function show(id) {
-  const m = MODULES.find(x => x.id === id) || MODULES[0];
+  let m = MODULES.find(x => x.id === id) || MODULES[0];
+  if (!modVisible(m)) m = MODULES.find(modVisible) || m;
+  syncTabs();
   [...tabs.children].forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === m.id)));
   const lead = h("section", { class: "card lead" }, h("h2", {}, m.title), h("p", {}, m.lead.text));
+  if (m.kind) lead.prepend(h("span", { class: "day-badge " + m.day }, (m.day === "thu" ? "Чт" : "Пн") + " · " + m.kind));
   if (m.lead.link) lead.append(h("div", {}, h("a", { class: "btn", href: m.lead.link, target: "_blank", rel: "noopener" }, m.lead.linkText + " ↗")));
-  const nodes = [lead]; let list = m.ex;
+  const nodes = [lead]; let list, day = m.day;
   if (m.groups) {
-    const gi = subSel[m.id] || 0;
-    nodes.push(h("div", { class: "subtabs", role: "tablist" }, m.groups.map((g, i) => h("button", { type: "button", role: "tab", class: "sub", "aria-selected": String(i === gi), onclick: () => { subSel[m.id] = i; show(m.id); window.scrollTo(0, 0); } }, g.tab))));
-    list = m.groups[gi].ex;
-  }
-  view.replaceChildren(...nodes, ...list.map(exCard));
+    const gs = visGroups(m); let gi = subSel[m.id] || 0; if (gi >= gs.length) gi = 0;
+    nodes.push(h("div", { class: "subtabs", role: "tablist" }, gs.map((g, i) => h("button", { type: "button", role: "tab", class: "sub", "aria-selected": String(i === gi), onclick: () => { subSel[m.id] = i; show(m.id); window.scrollTo(0, 0); } }, g.tab))));
+    list = gs[gi].ex; day = gs[gi].day || m.day;
+  } else list = m.ex;
+  view.replaceChildren(...nodes, ...list.map(e => exCard(e, day, m.kind)));
 }
 function stats() {
   const all = MODULES.flatMap(exsOf).filter(scored);
@@ -760,6 +842,9 @@ function stats() {
   document.getElementById("mbar").setAttribute("aria-valuenow", pct);
   document.getElementById("mtxt").textContent = `Выполнено упражнений: ${done} из ${all.length}`;
   document.getElementById("mpts").textContent = `Баллы: ${pts} из ${max}`;
+  const cnt = { all: [done, all.length], mon: [0, 0], thu: [0, 0] };
+  all.forEach(e => { const d = DAY_OF[e.id]; if (cnt[d]) { cnt[d][1]++; if (store.res[e.id]) cnt[d][0]++; } });
+  [...daysEl.children].forEach(b => { const k = b.dataset.k; b.querySelector(".dc").textContent = cnt[k][0] + "/" + cnt[k][1]; b.setAttribute("aria-pressed", String(k === daySel)); });
   return { all, done, pts, max };
 }
 MODULES.forEach(m => tabs.append(h("button", { type: "button", role: "tab", class: "tab", "data-id": m.id, onclick: () => { location.hash = m.id; } }, m.tab)));
