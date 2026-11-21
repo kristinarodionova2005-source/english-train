@@ -117,7 +117,7 @@ body.pdfmode { --bg: #ffffff; --card: #ffffff; --ink: #1d2340; --muted: #5d6585;
 .theory table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 .theory th, .theory td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
 .theory th { background: var(--chip); font-weight: 600; }
-.why { display: block; font-size: 13px; margin-top: 4px; color: var(--muted); overflow-wrap: anywhere; }
+.why { white-space: pre-line; display: block; font-size: 13px; margin-top: 4px; color: var(--muted); overflow-wrap: anywhere; }
 .item.ok .why, .item.bad .why { color: var(--ink); }
 .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
@@ -892,6 +892,105 @@ const WHY = {
     "Первое упоминание: a strange bird."]
 };
 Object.keys(WHY).forEach(id => { const ex = MODULES.flatMap(exsOf).find(e => e.id === id); if (ex) WHY[id].forEach((w, i) => { if (ex.items[i]) ex.items[i].why = w; }); });
+const WHY2 = {
+  va1: [
+    "Фразовый глагол с предлогом: look forward to.\nПеревод: с нетерпением ждать. После to идёт -ing или существительное.\nПример: I'm looking forward to the weekend. — Я жду выходных.",
+    "Устойчивое выражение с предлогом at: at the last minute.\nПеревод: в последний момент.\nПример: He booked the tickets at the last minute. — Он купил билеты в последний момент.",
+    "Фразовый глагол: set off.\nПеревод: отправиться в путь. Время или место добавляется через at, for, to.\nПример: We set off at six. — Мы выехали в шесть.",
+    "Фразовый глагол: break down.\nПеревод: сломаться (о машине, технике). Прошедшее время: broke down.\nПример: Our bus broke down. — Наш автобус сломался.",
+    "Устойчивое выражение с предлогами in и of: in the middle of nowhere.\nПеревод: в глуши.\nПример: Their house is in the middle of nowhere. — Их дом стоит в глуши.",
+    "Фразовый глагол: pull over.\nПеревод: съехать на обочину и остановиться.\nПример: The driver pulled over to check the map. — Водитель съехал на обочину, чтобы посмотреть карту.",
+    "Фразовый глагол: sort out.\nПеревод: уладить, разобраться. Можно сказать sort it out.\nПример: Don't worry, I'll sort it out. — Не волнуйся, я всё улажу.",
+    "Устойчивое выражение с предлогом with: be fed up with.\nПеревод: надоело, сыт по горло. После with идёт -ing или существительное.\nПример: I'm fed up with waiting. — Мне надоело ждать."],
+  va2: [
+    "Фразовый глагол: break down, здесь в прошедшем времени: broke down.\nПеревод: сломаться.\nПример: Our bus broke down on the way to school. — Наш автобус сломался по дороге в школу.",
+    "Фразовый глагол: pull over, здесь в прошедшем времени: pulled over.\nПеревод: съехать на обочину.\nПример: The driver pulled over. — Водитель съехал на обочину.",
+    "Устойчивое выражение: give someone a lift. Lift здесь существительное.\nПеревод: подвезти кого-то.\nПример: Can you give me a lift to the station? — Подвезёшь меня до вокзала?",
+    "Фразовый глагол: put up (a tent).\nПеревод: поставить палатку. Прошедшее время то же: put up.\nПример: They put up a tent near the river. — Они поставили палатку у реки.",
+    "Фразовый глагол: sort out. После I'll глагол в начальной форме.\nПеревод: уладить.\nПример: I'll sort out the problem. — Я решу эту проблему.",
+    "Фразовый глагол с предлогом: get along with someone.\nПеревод: ладить с кем-то. После I в Present Simple: get.\nПример: I get along well with my cousins. — Я хорошо лажу с двоюродными братьями.",
+    "Устойчивое выражение: take someone's breath away. Прошедшее время: took.\nПеревод: захватить дух.\nПример: The view took my breath away. — Вид захватил мне дух.",
+    "Фразовый глагол с предлогом: run out of. Прошедшее время: ran out of.\nПеревод: закончиться (о запасах).\nПример: We ran out of milk. — У нас закончилось молоко.",
+    "Устойчивое выражение: make it. Прошедшее время: made it.\nПеревод: успеть, добраться.\nПример: We made it to the airport just in time. — Мы успели в аэропорт вовремя.",
+    "Устойчивое выражение с предлогом at: at the last minute.\nПеревод: в последний момент.\nПример: He booked the tickets at the last minute. — Он купил билеты в последний момент."],
+  vb1: [
+    "Глагол: rush.\nПеревод: спешить, торопиться.\nПример: Don't rush! We have plenty of time. — Не торопись, времени полно.",
+    "Глагол: grab.\nПеревод: схватить.\nПример: She grabbed her bag and ran. — Она схватила сумку и побежала.",
+    "Фразовый глагол: throw on.\nПеревод: быстро накинуть (одежду).\nПример: He threw on a coat. — Он накинул пальто.",
+    "Устойчивое выражение: soaking wet.\nПеревод: мокрый насквозь.\nПример: I came home soaking wet. — Я пришёл домой мокрый насквозь.",
+    "Устойчивое выражение с предлогом of: out of breath.\nПеревод: запыхавшийся.\nПример: She was out of breath after climbing the stairs. — Она запыхалась, поднявшись по лестнице.",
+    "Фразовый глагол: come across.\nПеревод: случайно встретить или найти.\nПример: I came across an old friend at the shop. — Я случайно встретил старого друга в магазине.",
+    "Устойчивое выражение с предлогом in: be in trouble.\nПеревод: быть в неприятностях.\nПример: He's in trouble for breaking the window. — У него неприятности из-за разбитого окна.",
+    "Идиома: over the moon (дословно «над луной»).\nПеревод: на седьмом небе от счастья.\nПример: She was over the moon about her new bike. — Она была на седьмом небе от нового велосипеда."],
+  vb2: [
+    "Идиома: be over the moon.\nПеревод: на седьмом небе от счастья.\nПример: She was over the moon when she won. — Она была на седьмом небе, когда выиграла.",
+    "Фразовый глагол: leave behind. Прошедшее время: left behind.\nПеревод: забыть, оставить.\nПример: I left my phone behind at the café. — Я забыл телефон в кафе.",
+    "Устойчивое выражение с предлогом of: out of breath.\nПеревод: запыхавшийся.\nПример: He was completely out of breath. — Он совсем запыхался.",
+    "Фразовый глагол с предлогом: come up with. После need to глагол в начальной форме.\nПеревод: придумать (идею, план, оправдание).\nПример: She came up with a brilliant idea. — Ей пришла в голову блестящая идея.",
+    "Фразовый глагол: come across. Прошедшее время: came across.\nПеревод: случайно встретить.\nПример: I came across an old friend. — Я случайно встретил старого друга.",
+    "Глагол: rush. После Don't глагол в начальной форме.\nПеревод: торопить, спешить.\nПример: Don't rush me! — Не торопи меня!",
+    "Устойчивое вводное выражение: to make matters worse.\nПеревод: как назло, в довершение всего.\nПример: To make matters worse, it started to rain. — Как назло, начался дождь.",
+    "Фразовый глагол: cheer up. После tried to глагол в начальной форме.\nПеревод: развеселиться, поднять настроение.\nПример: Her friends tried to cheer her up. — Друзья пытались её подбодрить.",
+    "Фразовый глагол: turn out. Прошедшее время: turned out.\nПеревод: оказаться, получиться.\nПример: The party turned out really well. — Вечеринка получилась отличной.",
+    "Устойчивое выражение: soaking wet.\nПеревод: мокрый насквозь.\nПример: He arrived soaking wet. — Он пришёл мокрый насквозь."],
+  vb3: [
+    "Глагол: grab. Cheer up значит «развеселить» и сюда не подходит.\nПеревод: схватить.\nПример: I grabbed a sandwich and ran. — Я схватил бутерброд и побежал.",
+    "Фразовый глагол: cheer someone up.\nПеревод: поднять кому-то настроение.\nПример: Her jokes cheered me up. — Её шутки подняли мне настроение.",
+    "Фразовый глагол: come across. Come up with значит «придумать» и сюда не подходит.\nПеревод: случайно встретить.\nПример: I came across an old friend. — Я случайно встретил старого друга.",
+    "Устойчивая фраза: it could be worse.\nПеревод: могло быть и хуже (так подбадривают).\nПример: I failed one test, but it could be worse. — Я завалил один тест, но могло быть и хуже.",
+    "Устойчивое выражение: give someone a look.\nПеревод: бросить на кого-то взгляд.\nПример: My mum gave me an angry look. — Мама сердито на меня посмотрела.",
+    "Устойчивое выражение: feel relieved.\nПеревод: почувствовать облегчение.\nПример: I felt relieved when I passed the exam. — Я почувствовал облегчение, когда сдал экзамен."],
+  x4: [
+    "Фразовый глагол: throw on. Turn out значит «оказаться» и сюда не подходит.\nПеревод: быстро накинуть (одежду).\nПример: He threw on a coat and went outside. — Он накинул пальто и вышел.",
+    "Устойчивое выражение с предлогом in: be in trouble.\nПеревод: быть в неприятностях.\nПример: He's in trouble for breaking the window. — У него неприятности из-за окна.",
+    "Глагол: rush.\nПеревод: спешить.\nПример: Don't rush, we have plenty of time. — Не спеши, времени много.",
+    "Фразовый глагол с предлогом: come up with.\nПеревод: придумать.\nПример: I couldn't come up with a good excuse. — Я не смог придумать хорошее оправдание.",
+    "Устойчивое вводное выражение: to make matters worse.\nПеревод: как назло.\nПример: To make matters worse, we had forgotten the umbrella. — Как назло, мы забыли зонт.",
+    "Устойчивое выражение с предлогом to: look forward to.\nПеревод: с нетерпением ждать.\nПример: I'm looking forward to the holiday. — Я с нетерпением жду отпуска."],
+  x3: [
+    "Фразовый глагол: set off. Прошедшее время то же: set off.\nПеревод: отправиться в путь.\nПример: We set off at dawn. — Мы выехали на рассвете.",
+    "Устойчивое выражение с предлогом in: be in a hurry.\nПеревод: торопиться, быть в спешке.\nПример: I left in a hurry and forgot my keys. — Я ушёл в спешке и забыл ключи.",
+    "Фразовый глагол с предлогом: run out of. Прошедшее время: ran out of.\nПеревод: у нас закончилось.\nПример: We ran out of petrol. — У нас закончился бензин.",
+    "Идиома: be over the moon.\nПеревод: на седьмом небе от счастья.\nПример: He was over the moon after the exam. — Он был на седьмом небе после экзамена.",
+    "Фразовый глагол: come across. Прошедшее время: came across.\nПеревод: случайно встретить.\nПример: I came across an old friend. — Я случайно встретил старого друга.",
+    "Устойчивое выражение с предлогом to: look forward to. После to идёт -ing.\nПеревод: с нетерпением ждать.\nПример: I'm looking forward to seeing you. — Я жду встречи с тобой.",
+    "Устойчивое выражение: worth it.\nПеревод: стоит того.\nПример: The climb was hard, but it was worth it. — Подъём был тяжёлым, но он того стоил.",
+    "Фразовый глагол: break down. С often в Present Simple у it добавляется -s: breaks down.\nПеревод: ломаться.\nПример: My car often breaks down. — Моя машина часто ломается.",
+    "Устойчивое выражение: make it. После we глагол в начальной форме.\nПеревод: успеть, добраться.\nПример: I hope we make it to the station. — Надеюсь, мы успеем на вокзал.",
+    "Устойчивое выражение с предлогами in и of: in the middle of nowhere.\nПеревод: в глуши.\nПример: Their house is in the middle of nowhere. — Их дом стоит в глуши."],
+  p1: [
+    "Предлог времени at: с точным временем.\nПример: We set off at six o'clock. — Мы выехали в шесть часов.",
+    "Предлог времени in: с месяцами.\nПример: My birthday is in March. — Мой день рождения в марте.",
+    "Предлог времени on: с днями недели.\nПример: See you on Monday! — Увидимся в понедельник!",
+    "Предлог времени in: с годами.\nПример: He was born in 2010. — Он родился в 2010 году.",
+    "At the weekend (британский вариант) или on the weekend (американский).\nПример: We visit Grandma at the weekend. — Мы навещаем бабушку на выходных.",
+    "Предлог времени in: с частями дня (кроме night).\nПример: The film starts in the evening. — Фильм начинается вечером.",
+    "Устойчивое выражение: at night. С night используется at, это исключение.\nПример: Do you work at night? — Ты работаешь ночью?",
+    "Предлог времени on: когда день недели вместе с частью дня.\nПример: We had a picnic on Saturday afternoon. — У нас был пикник в субботу днём.",
+    "Предлог времени in: с месяцами и временами года.\nПример: Winter starts in December. — Зима начинается в декабре.",
+    "In + промежуток времени значит «через».\nПример: I'll call you in five minutes. — Я позвоню тебе через пять минут."],
+  p3: [
+    "Глагол с предлогом: wait for.\nПеревод: ждать кого-то или что-то. Без for нельзя.\nПример: I'm waiting for the bus. — Я жду автобус.",
+    "Прилагательное с предлогом: be good at. После at идёт -ing или существительное.\nПеревод: хорошо уметь что-то делать.\nПример: She is good at drawing. — Она хорошо рисует.",
+    "Глагол с предлогом: listen to.\nПеревод: слушать.\nПример: Listen to me! — Послушай меня!",
+    "Прилагательное с предлогом: be afraid of.\nПеревод: бояться.\nПример: He's afraid of dogs. — Он боится собак.",
+    "Прилагательное с предлогом: be interested in.\nПеревод: интересоваться.\nПример: We are interested in history. — Нас интересует история.",
+    "Глагол с предлогом: belong to.\nПеревод: принадлежать.\nПример: This book belongs to me. — Эта книга принадлежит мне.",
+    "Глагол с предлогом: look for. Look at значит «смотреть на».\nПеревод: искать.\nПример: I'm looking for my phone. — Я ищу свой телефон.",
+    "Глагол с предлогом: laugh at.\nПеревод: смеяться над.\nПример: They laughed at his joke. — Они смеялись над его шуткой.",
+    "Глагол с предлогом: depend on.\nПеревод: зависеть от.\nПример: It depends on the weather. — Это зависит от погоды.",
+    "Устойчивое выражение с предлогом: be fed up with. После with идёт -ing или существительное.\nПеревод: надоело.\nПример: I'm fed up with this noise. — Мне надоел этот шум."],
+  p5: [
+    "Предлог времени on: день недели вместе с частью дня.\nПример: We set off on Saturday morning. — Мы выехали в субботу утром.",
+    "Устойчивое выражение: in the middle of.\nПеревод: посреди, в глуши.\nПример: The van broke down in the middle of nowhere. — Фургон сломался в глуши.",
+    "Устойчивое выражение: give someone a lift to + место.\nПеревод: подвезти до.\nПример: A farmer gave us a lift to the village. — Фермер подвёз нас до деревни.",
+    "Предлог through: движение сквозь что-то (лес, парк).\nПеревод: через, сквозь.\nПример: We walked through the forest. — Мы шли через лес.",
+    "Предлог next to.\nПеревод: рядом с.\nПример: We put up our tents next to a small wood. — Мы поставили палатки рядом с лесочком.",
+    "Предлог towards (допустимо и to): направление движения.\nПеревод: к, в направлении.\nПример: Ruby ran towards an old cottage. — Руби побежала к старому домику.",
+    "Фразовый глагол с предлогом: get along with someone.\nПеревод: ладить с кем-то.\nПример: We got along well with her grandson. — Мы хорошо поладили с её внуком.",
+    "Устойчивое выражение с предлогом: in the end.\nПеревод: в конце концов.\nПример: In the end, it was worth it. — В конце концов, это того стоило."]
+};
+Object.keys(WHY2).forEach(id => { const ex = MODULES.flatMap(exsOf).find(e => e.id === id); if (ex) WHY2[id].forEach((w, i) => { if (ex.items[i]) ex.items[i].why = w; }); });
 
 
 
@@ -1302,7 +1401,7 @@ function exCard(ex, day, kind) {
     const runCheck = silent => {
       const { c, t } = r.check(); card._last = { c, t }; card._done = true; touched = true;
       const rows = holder.querySelectorAll(".item");
-      ex.items.forEach((it, i) => { const row = rows[i]; if (!row) return; const old = row.querySelector(".why"); if (old) old.remove(); if (it.why) row.append(h("span", { class: "why" }, "Почему: " + it.why)); });
+      ex.items.forEach((it, i) => { const row = rows[i]; if (!row) return; const old = row.querySelector(".why"); if (old) old.remove(); if (it.why) row.append(h("span", { class: "why" }, (it.why.includes("\n") ? "" : "Почему: ") + it.why)); });
       const f = t ? c / t : 0;
       out.textContent = `Результат: ${c} из ${t}. ` + (f >= 1 ? "Идеально!" : f >= 0.75 ? "Хорошо, посмотри на ошибки." : "Попробуй ещё раз: правильные ответы показаны под ошибками.");
       if (f >= 1 && !silent) celebrate(card);
