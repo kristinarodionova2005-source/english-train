@@ -117,6 +117,8 @@ body.pdfmode { --bg: #ffffff; --card: #ffffff; --ink: #1d2340; --muted: #5d6585;
 .theory table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 .theory th, .theory td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
 .theory th { background: var(--chip); font-weight: 600; }
+.why { display: block; font-size: 13px; margin-top: 4px; color: var(--muted); overflow-wrap: anywhere; }
+.item.ok .why, .item.bad .why { color: var(--ink); }
 .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
 [hidden]{display:none!important}
@@ -136,20 +138,7 @@ body.pdfmode { --bg: #ffffff; --card: #ffffff; --ink: #1d2340; --muted: #5d6585;
   <div class="days" id="places" role="group" aria-label="Урок или дом"></div>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div id="view"></div>
-  <div class="card" id="summary">
-    <h2>Результат для учителя</h2>
-    <p class="ins">Нажми «Скачать результат», открой Telegram учителя и прикрепи файл (скрепка). Голосовые из заданий speaking отправляй так же.</p>
-    <div class="actions">
-      <button class="btn" id="dlres">Скачать результат (файл)</button>
-      <a class="btn" id="tglink" href="https://t.me/krrodionovaa" target="_blank" rel="noopener">Открыть Telegram учителя</a>
-      <button class="btn ghost" id="copy">Скопировать результат</button>
-      <button class="btn ghost" id="mail">Открыть письмо с результатом</button>
-      <button class="btn ghost" id="reset">Сбросить прогресс</button>
-    </div>
-    <div class="sumbox" id="sumbox" hidden><textarea id="sumtext" readonly aria-label="Текст результата"></textarea></div>
-    <div class="foot" id="resetask" hidden><span>Весь прогресс будет удалён.</span>
-      <button class="btn" id="resetyes">Да, сбросить</button><button class="btn ghost" id="resetno">Отмена</button></div>
-  </div>
+  
 </div>
 
 <script>
@@ -634,6 +623,277 @@ const MODULES = [
 ];
 
 [...OLD2].flatMap(exsOf).forEach(e => { if (BANKS[e.id]) e.box = BANKS[e.id]; });
+const WHY = {
+  v1: [
+    "Sammy в начале говорит, что хочет поехать в свой любимый кемпинг, и рассказывает о нём.",
+    "Julia говорит: I don't like camping, I hate tents, I prefer hotels.",
+    "Среди удобств Sammy называет a really big swimming pool.",
+    "Лыжного склона среди удобств нет: есть бассейн, корты, спортзал, магазин, озеро.",
+    "Julia прямо говорит: I hate tents.",
+    "Вместо палаток Sammy предлагает small wooden huts с кухней и спальнями, «как в отеле».",
+    "Местная женщина говорит, что кемпинг закрыли десять лет назад, на его месте построили город.",
+    "В конце Julia говорит: Let's find a hotel."],
+  v2: [
+    "Названо: a really big swimming pool.",
+    "Кинотеатра нет. Упоминается только TV room, где по вечерам показывают DVD.",
+    "Названо: a gym.",
+    "Не называется среди удобств.",
+    "Sammy говорит: I think a jacuzzi and a sauna.",
+    "Не называется среди удобств.",
+    "Названо: a small lake in the middle of the campsite.",
+    "Не называется среди удобств.",
+    "Внутри кемпинга есть supermarket: «они там всё есть».",
+    "Названо: bike hire.",
+    "Sammy говорит: I think a jacuzzi and a sauna.",
+    "Не называется среди удобств."],
+  v3: [
+    "Sammy хочет поехать в свой любимый кемпинг (campsite).",
+    "Sammy говорит, что на территории four tennis courts.",
+    "Julia: I don't like camping. I prefer hotels.",
+    "Вместо палаток Sammy предлагает small wooden huts, «как в отеле».",
+    "Они спрашивают о кемпинге местную женщину на улице.",
+    "Женщина объясняет: кемпинга больше нет, его закрыли десять лет назад.",
+    "Sammy был там на школьной экскурсии около десяти лет назад."],
+  v4: [
+    "Один предмет (a pool) и утверждение: There is.",
+    "Four tennis courts: множественное число, значит There are.",
+    "Вопрос про множественное число (any shops): Are there…?",
+    "Вопрос про один предмет (a gym): Is there…?",
+    "A bar: один предмет, значит There is.",
+    "Отрицание при множественном числе (any ski slopes): There aren't."],
+  v5: [
+    "Вопрос про один предмет: Is there + a + существительное?",
+    "Вопрос про множественное число: Are there + any + существительное во мн. ч.?",
+    "Вопрос о количестве: How many + мн. ч. + are there?",
+    "Утверждение: There is + предмет + где он находится.",
+    "Отрицание: There isn't + a + существительное + here now."],
+  x5: [
+    "Точное время в прошлом (at 8 o'clock last night): процесс в этот момент, Past Continuous.",
+    "По облакам видно, что сейчас случится: be going to (будущее, тема для урока).",
+    "Never: опыт до настоящего момента, Present Perfect (have never been).",
+    "Решение в момент речи («я закрою окно»): will (будущее, тема для урока).",
+    "Процесс в саду прервал дождь: Past Continuous для процесса, Past Simple для прервавшего действия.",
+    "Usually: привычка, Present Simple, у he/she/it добавляется -s: drives.",
+    "Today: действие именно сегодня, Present Continuous: is taking.",
+    "Last summer: законченное время в прошлом, Past Simple: went.",
+    "Since Monday: период до сих пор, Present Perfect: have been.",
+    "While + длительный процесс: was cooking.",
+    "Два процесса идут одновременно (while…), оба в Past Continuous: was putting up.",
+    "Not yet: действие ещё не закончено и идёт сейчас, Present Continuous: am still putting up."],
+  m1: [
+    "Every morning: привычка, Present Simple (+ s).",
+    "Look!: происходит прямо сейчас, Present Continuous.",
+    "Three times: жизненный опыт, Present Perfect (have been to).",
+    "Процесс в прошлом, который прервало короткое действие (the lights went out): Past Continuous.",
+    "Поезд ушёл раньше, чем мы пришли: Past Perfect (had left).",
+    "Last week: законченное время, Past Simple.",
+    "While + процесс в прошлом: Past Continuous, а короткое действие дальше в Past Simple.",
+    "Since 2019: период до сих пор, Present Perfect.",
+    "Общий факт: Present Simple.",
+    "Потеря ключей случилась раньше, чем невозможность открыть дверь: Past Perfect (had lost)."],
+  pp2: [
+    "Фильм начался раньше, чем я пришёл: более раннее действие в Past Perfect (had started).",
+    "Сначала брат сломал ноутбук, потом она рассердилась: более раннее действие в Past Perfect.",
+    "Запер дверь и потом пошёл: действия идут одно за другим, оба в Past Simple.",
+    "Два дня до прихода спасателей: Past Perfect (had been missing).",
+    "Провалил экзамен: это главное событие в Past Simple. Причина (hadn't studied) была раньше.",
+    "Все ушли раньше, чем мы пришли: Past Perfect (had gone)."],
+  pc2: [
+    "Шли (процесс), и вдруг услышали шум: Past Continuous для процесса.",
+    "Открывал дверь, когда погас свет: процесс прервало короткое действие.",
+    "Dad чинил машину долго, а Mum в это время делала бутерброды: длительный процесс, Past Continuous.",
+    "Быстрое разовое действие в цепочке («схватила и побежала»): Past Simple.",
+    "Принимал душ (процесс), его прервал звонок: Past Continuous.",
+    "Услышал новости: короткое действие, после него следующее (jumped): Past Simple.",
+    "Играли (процесс), потом пошёл дождь (короткое действие): Past Continuous.",
+    "Сломал ногу: короткое событие во время процесса (was skiing), Past Simple."],
+  m2: [
+    "Usually: привычка, Present Simple (+ s).",
+    "At 8 o'clock last night: процесс в момент в прошлом, Past Continuous.",
+    "Ушли раньше, чем мы пришли: Past Perfect (already между had и V3).",
+    "Never: опыт к настоящему моменту, Present Perfect: have never been.",
+    "Last year: законченное время, Past Simple (break, broke).",
+    "Be quiet!: прямо сейчас, Present Continuous.",
+    "Since 2018: период до сих пор, Present Perfect.",
+    "While: процесс, который прервал звонок, Past Continuous.",
+    "After: Past Perfect показывает более раннее действие, но Past Simple тоже допустим, потому что after уже задаёт порядок.",
+    "Yet: результата ещё нет, Present Perfect, отрицание hasn't + V3 (done)."],
+  m3: [
+    "Last weekend: законченное время, Past Simple (go, went).",
+    "All week: процесс в течение прошлого периода, Past Continuous.",
+    "Короткое действие в прошлом: when + Past Simple (got).",
+    "Палатку поставили раньше, чем мы приехали: Past Perfect (had already put up).",
+    "While: длительный процесс, Past Continuous (was swimming).",
+    "Suddenly: внезапное короткое действие, Past Simple.",
+    "Зонты не взяли раньше, и из-за этого промокли: Past Perfect (hadn't brought). Past Simple тоже допустим.",
+    "Now: действие идёт сейчас, Present Continuous (am writing)."],
+  x6: [
+    "Точный момент в прошлом и процесс: was + V-ing (was rushing).",
+    "Отрицание в Past Continuous: wasn't driving, второй процесс: was waiting.",
+    "Вопрос: What + were + the children + doing; прервавшее действие: when + Past Simple (stopped).",
+    "Вопрос «да/нет»: Were you looking forward…? Last week задаёт прошлое.",
+    "All evening: длительный процесс, оба глагола в Past Continuous.",
+    "Процесс в отрицании: wasn't paying attention; следствие короткое: didn't hear (Past Simple)."],
+  x7: [
+    "Длинное действие после while: were driving. Короткое: broke down.",
+    "Длинное действие: was looking. Короткое, которое его прервало: came across.",
+    "As здесь как while: as + Past Continuous (was running), потом Past Simple (dropped).",
+    "Три процесса идут одновременно: все глаголы в Past Continuous.",
+    "Короткое прервавшее действие: when + Past Simple (started). Длинное: were having."],
+  pp4: [
+    "After + Past Perfect для более раннего (had finished), потом Past Simple (went out).",
+    "By the time + Past Simple (arrived), а магазин закрылся раньше: Past Perfect (had closed).",
+    "Раньше случилось то, что в Past Perfect: had already left. Before she called: Past Simple.",
+    "Автобус уехал раньше: had gone. When I got to the stop: Past Simple."],
+  x8: [
+    "While + процесс: was walking, короткое действие в Past Simple (saw). Present Perfect с прошлым не сочетается.",
+    "Look forward to: to здесь предлог, после него глагол с -ing: seeing.",
+    "После didn't глагол в начальной форме: didn't go.",
+    "Порядок слов в вопросе: вопросительное слово + were + you + doing.",
+    "Есть признак (небо): предсказание по признаку, be going to, а не will.",
+    "Yesterday: точное прошлое, Past Simple (lost), не Present Perfect.",
+    "Know: глагол состояния, в Continuous не используется. Past Simple: knew.",
+    "They были: were (мн. ч.). Короткое прервавшее действие: when + Past Simple (started).",
+    "Be fed up with: после fed up нужен предлог with."],
+  m4: [
+    "Since 2019: период до сих пор, нужен Present Perfect: have lived.",
+    "Фильм начался раньше, чем я пришёл: Past Perfect (had already started).",
+    "У he/she/it в Present Simple глагол получает -s: goes.",
+    "At the moment: прямо сейчас, Present Continuous: What are you doing?",
+    "Yesterday: законченное прошлое, Past Simple: saw (see, saw).",
+    "Yesterday с Present Perfect не сочетается: Past Simple finished."],
+  f1: [
+    "Есть признак сейчас (небо): be going to.",
+    "Решение в момент речи («принесу воды»): will.",
+    "План уже есть (билеты куплены): be going to или Present Continuous.",
+    "I think + прогноз: will.",
+    "Спонтанное решение: will buy.",
+    "План уже есть (курс выбран): be going to или Present Continuous.",
+    "Видим, что сейчас произойдёт: be going to.",
+    "I think + прогноз: will be."],
+  va1: [
+    "С нетерпением ждать приятного. После to идёт -ing: I'm looking forward to seeing you.",
+    "В последний момент, почти опоздав.",
+    "Отправиться в путь.",
+    "Сломаться (о машине, автобусе).",
+    "В глуши, очень далеко от городов.",
+    "Съехать на обочину и остановиться.",
+    "Уладить, найти решение проблемы.",
+    "Надоело, устал от чего-то. После with идёт -ing или существительное."],
+  va2: [
+    "Break down значит «сломаться». Прошедшее время: broke down.",
+    "Pull over значит «съехать на обочину». Прошедшее время: pulled over.",
+    "Give someone a lift значит «подвезти», lift здесь существительное.",
+    "Put up a tent значит «поставить палатку». Прошедшее время такое же: put up.",
+    "После I'll глагол в начальной форме: sort out (уладить).",
+    "Get along well with значит «ладить». После I в Present Simple: get.",
+    "Take someone's breath away значит «захватить дух». Прошедшее время: took.",
+    "Run out of значит «закончиться». Прошедшее время: ran out of.",
+    "Make it значит «успеть, добраться». Прошедшее время: made it.",
+    "At the last minute значит «в последний момент»."],
+  vb1: [
+    "Rush значит «спешить».",
+    "Grab значит «схватить рукой».",
+    "Throw on значит «быстро натянуть одежду».",
+    "Soaking wet значит «промокший насквозь».",
+    "Out of breath значит «запыхавшийся».",
+    "Come across значит «случайно встретить».",
+    "In trouble значит «в неприятностях», возможно, с наказанием.",
+    "Over the moon значит «на седьмом небе от счастья»."],
+  vb2: [
+    "Получила приз и очень счастлива: over the moon.",
+    "Leave behind значит «забыть, оставить». Прошедшее время: left behind.",
+    "Пробежал шесть этажей: запыхался, out of breath.",
+    "Need to + начальная форма: come up with a plan (придумать).",
+    "Случайная встреча в прошлом: came across.",
+    "Don't + начальная форма: rush me (не торопи меня).",
+    "To make matters worse значит «как назло, и вдобавок».",
+    "Tried to + начальная форма: cheer up (поднять настроение).",
+    "Прошедшее время от turn out: turned out («оказался»).",
+    "Шёл под дождём и пришёл насквозь мокрый: soaking wet."],
+  vb3: [
+    "Grabbed значит «схватил»: схватил бутерброд и побежал.",
+    "Cheer someone up значит «поднять настроение».",
+    "Came across значит «случайно встретил». Come up with значит «придумать».",
+    "It could be worse значит «могло быть и хуже», так утешают.",
+    "Give someone a look значит «бросить взгляд».",
+    "Relieved значит «почувствовал облегчение»."],
+  x4: [
+    "Throw on значит «быстро натянуть одежду». Turn out значит «оказаться».",
+    "Разбила окно: в неприятностях (in trouble), не запыхалась.",
+    "Rush значит «спешить»: не торопись, времени много.",
+    "Come up with an excuse: придумать оправдание. Come across значит «встретить».",
+    "To make matters worse: вводит ещё одну неприятность (мы забыли зонт).",
+    "Looking forward to: с нетерпением ждёт, потому что уже собрал сумку."],
+  x3: [
+    "Вчера отправились в путь: Past Simple, set off.",
+    "Was in a hurry значит «в спешке», поэтому забыл обед.",
+    "Бензин закончился: Past Simple, ran out of.",
+    "Над he's идёт over the moon: очень счастлив.",
+    "Случайно встретили: Past Simple, came across.",
+    "I'm looking forward to + -ing: с нетерпением жду.",
+    "Worth it значит «стоит того».",
+    "Often: привычка, Present Simple. У it добавляется -s: breaks down.",
+    "I hope we make it: надеюсь, успеем. После we начальная форма.",
+    "In the middle of nowhere значит «в глуши», поэтому магазинов нет."],
+  p1: [
+    "At + точное время: at six o'clock.",
+    "In + месяц.",
+    "On + день недели.",
+    "In + год.",
+    "At the weekend (британский вариант) или on the weekend (американский).",
+    "In the evening: с частями дня используем in.",
+    "At night: исключение, с night нужен at.",
+    "On Saturday afternoon: день недели вместе с частью дня, нужен on.",
+    "In + месяц.",
+    "In five minutes значит «через пять минут»."],
+  p3: [
+    "Wait for значит «ждать».",
+    "Be good at значит «хорошо уметь».",
+    "Listen to значит «слушать».",
+    "Be afraid of значит «бояться».",
+    "Be interested in значит «интересоваться».",
+    "Belong to значит «принадлежать».",
+    "Look for значит «искать». Look at значит «смотреть».",
+    "Laugh at значит «смеяться над».",
+    "Depend on значит «зависеть от».",
+    "Be fed up with значит «надоело»."],
+  p5: [
+    "On + день недели вместе с частью дня: on Saturday morning.",
+    "In the middle of значит «посреди, в глуши».",
+    "A lift to значит «подвезти до».",
+    "Through the forest значит «через лес, сквозь лес».",
+    "Next to значит «рядом с».",
+    "Towards значит «в направлении». Допустимо и to.",
+    "Get along with значит «ладить с».",
+    "In the end значит «в конце концов»."],
+  ar1: [
+    "Idea начинается с гласного звука: an idea.",
+    "Единственное в своём роде (the sun) идёт с the.",
+    "С музыкальными инструментами: play the guitar.",
+    "Приёмы пищи без артикля: have breakfast.",
+    "Engineer начинается с гласного звука и это профессия: an engineer.",
+    "Собака уже упоминалась, она известна: the dog.",
+    "Go to school в значении «учиться» без артикля.",
+    "Превосходная степень: the best."],
+  ar2: [
+    "Первое упоминание, предмет один из многих: a big shop.",
+    "Из контекста понятно, о каком пляже речь: the beach.",
+    "The weather всегда с the.",
+    "Apple начинается с гласного звука: an apple pie.",
+    "Перед my артикль не нужен: in my bed.",
+    "At school (в значении «на занятиях») без артикля."],
+  ar3: [
+    "Приём пищи без артикля: have breakfast.",
+    "Профессия: a doctor.",
+    "Музыка вообще, общее понятие: без артикля.",
+    "С видами спорта артикля нет: play football.",
+    "Столица страны одна: the capital.",
+    "Первое упоминание: a strange bird."]
+};
+Object.keys(WHY).forEach(id => { const ex = MODULES.flatMap(exsOf).find(e => e.id === id); if (ex) WHY[id].forEach((w, i) => { if (ex.items[i]) ex.items[i].why = w; }); });
+
+
 
 const THEORY = {
   "video": `<p><b>Как работать с видео.</b></p>
@@ -911,7 +1171,6 @@ function recorder(ex) {
   const audio = h("audio", { controls: "controls", hidden: true, class: "player" });
   const dl = h("a", { class: "btn ghost", hidden: true }, "Скачать запись");
   const share = h("button", { type: "button", class: "btn ghost", hidden: true }, "Поделиться файлом");
-  const tg = h("a", { class: "btn", href: "https://t.me/krrodionovaa", target: "_blank", rel: "noopener", hidden: true }, "Открыть Telegram учителя");
   let mr = null, stream = null, chunks = [], timer = null, t0 = 0, blob = null, fname = "";
   const mk = () => new File([blob], fname, { type: blob.type });
   rec.onclick = async () => {
@@ -928,18 +1187,18 @@ function recorder(ex) {
       fname = "speaking-" + ex.id + "-" + (store.name || "student").replace(/[^A-Za-z0-9Ѐ-ӿ]+/g, "_") + "." + ext;
       if (audio.src) URL.revokeObjectURL(audio.src);
       audio.src = URL.createObjectURL(blob); dl.href = audio.src; dl.download = fname;
-      audio.hidden = false; dl.hidden = false; tg.hidden = false;
+      audio.hidden = false; dl.hidden = false;
       let can = false; try { can = !!(navigator.canShare && navigator.canShare({ files: [mk()] })); } catch (e) {}
       share.hidden = !can;
       rec.hidden = false; rec.textContent = "● Записать заново"; stop.hidden = true;
-      status.textContent = "Готово. 1) Нажми «Скачать запись». 2) Открой Telegram учителя и прикрепи файл (скрепка). Запись хранится, пока открыта страница.";
+      status.textContent = "Готово. Нажми «Скачать запись», затем отправь файл учителю в Telegram (кнопка внизу страницы). Запись хранится, пока открыта страница.";
     };
     mr.start(); t0 = Date.now(); rec.hidden = true; stop.hidden = false;
     timer = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); status.textContent = "Идёт запись " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }, 500);
   };
   stop.onclick = () => { if (mr && mr.state !== "inactive") mr.stop(); };
   share.onclick = async () => { try { await navigator.share({ files: [mk()] }); } catch (e) {} };
-  return h("div", { class: "rec" }, h("div", { class: "actions" }, rec, stop, dl, tg, share), audio, status);
+  return h("div", { class: "rec" }, h("div", { class: "actions" }, rec, stop, dl, share), audio, status);
 }
 R.speak = function (ex) {
   const o = R.open(ex);
@@ -1042,6 +1301,8 @@ function exCard(ex, day, kind) {
     let chk = null, again = null;
     const runCheck = silent => {
       const { c, t } = r.check(); card._last = { c, t }; card._done = true; touched = true;
+      const rows = holder.querySelectorAll(".item");
+      ex.items.forEach((it, i) => { const row = rows[i]; if (!row) return; const old = row.querySelector(".why"); if (old) old.remove(); if (it.why) row.append(h("span", { class: "why" }, "Почему: " + it.why)); });
       const f = t ? c / t : 0;
       out.textContent = `Результат: ${c} из ${t}. ` + (f >= 1 ? "Идеально!" : f >= 0.75 ? "Хорошо, посмотри на ошибки." : "Попробуй ещё раз: правильные ответы показаны под ошибками.");
       if (f >= 1 && !silent) celebrate(card);
@@ -1092,7 +1353,7 @@ function show(id) {
   } else list = m.ex.filter(exOk);
   const th = THEORY[m.groups ? m.id + ":" + cur.g : m.id]; if (th) nodes.push(theoryCard(th));
   if (!list.length) nodes.push(h("div", { class: "card" }, "Для этого фильтра заданий нет."));
-  view.replaceChildren(...nodes, ...(list.length ? [pageBar()] : []), ...list.map(e => exCard(e, null, m.kind)), ...(list.length ? [pageBar()] : []));
+  view.replaceChildren(...nodes, ...list.map(e => exCard(e, null, m.kind)), pageBar());
 }
 let lastPdf = null;
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9Ѐ-ӿ]+/g, "-").replace(/^-+|-+$/g, "");
@@ -1146,7 +1407,6 @@ async function makePdf(dry) {
 }
 function pageBar() {
   const st = h("span", { class: "foot", "aria-live": "polite" });
-  const chk = h("button", { type: "button", class: "btn ghost", onclick: () => { [...view.querySelectorAll(".card.ex")].forEach(c => { if (c._chk && !c._chk.hidden) c._chk.click(); }); st.textContent = "Всё проверено."; } }, "Проверить всё на странице");
   const pdf = h("button", { type: "button", class: "btn" }, "Скачать PDF этой страницы");
   pdf.onclick = async () => {
     pdf.disabled = true; st.textContent = "Готовлю PDF…";
@@ -1155,7 +1415,11 @@ function pageBar() {
     pdf.disabled = false;
   };
   const tg = h("a", { class: "btn ghost", href: "https://t.me/krrodionovaa", target: "_blank", rel: "noopener" }, "Открыть Telegram учителя");
-  return h("div", { class: "card pagebar" }, h("div", { class: "actions" }, chk, pdf, tg, st));
+  const ask = h("div", { class: "foot", hidden: true }, h("span", {}, "Весь прогресс будет удалён."),
+    h("button", { type: "button", class: "btn", onclick: () => { flushers.clear(); store.res = {}; store.ans = {}; save(); show(location.hash.slice(1)); stats(); } }, "Да, сбросить"),
+    h("button", { type: "button", class: "btn ghost", onclick: () => { ask.hidden = true; } }, "Отмена"));
+  const reset = h("button", { type: "button", class: "btn ghost", onclick: () => { ask.hidden = false; } }, "Сбросить прогресс");
+  return h("div", { class: "card pagebar" }, h("div", { class: "actions" }, pdf, tg, reset), st, ask);
 }
 function stats() {
   const all = MODULES.flatMap(exsOf).filter(scored);
@@ -1179,38 +1443,7 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 const nameEl = document.getElementById("name");
 nameEl.value = store.name || ""; nameEl.addEventListener("input", () => { store.name = nameEl.value; save(); });
 
-const TEACHER_EMAIL = "kristina.rodionova.2005@gmail.com";
-function summaryText() {
-  const s = stats(); const d = new Date();
-  const lines = [`Результаты: ${store.name || "ученик"}, ${d.toLocaleDateString("ru-RU")}`, `Выполнено ${s.done} из ${s.all.length}, баллы ${s.pts} из ${s.max}`, ""];
-  MODULES.forEach(m => { lines.push(m.title + ":"); exsOf(m).filter(scored).forEach(e => { const r = store.res[e.id]; lines.push(`  ${e.title}: ${r ? r.c + "/" + r.t : "не выполнено"}`); }); });
-  return lines.join("\n");
-}
-document.getElementById("dlres").onclick = () => {
-  const text = summaryText();
-  const safe = (store.name || "student").replace(/[^A-Za-z0-9\u0400-\u04ff]+/g, "_");
-  const b = new Blob(["\ufeff" + text], { type: "text/plain;charset=utf-8" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(b);
-  a.download = "results-" + safe + "-" + new Date().toISOString().slice(0, 10) + ".txt";
-  document.body.append(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-  const ta = document.getElementById("sumtext"); ta.value = text; document.getElementById("sumbox").hidden = false;
-};
-document.getElementById("copy").onclick = () => {
-  const text = summaryText();
-  const box = document.getElementById("sumbox"), ta = document.getElementById("sumtext");
-  ta.value = text; box.hidden = false; ta.focus(); ta.select();
-  try { navigator.clipboard.writeText(text).then(() => { ta.blur(); document.getElementById("copy").textContent = "Скопировано"; }).catch(() => {}); } catch (e) {}
-};
-document.getElementById("mail").onclick = () => {
-  const text = summaryText(), ta = document.getElementById("sumtext");
-  ta.value = text; document.getElementById("sumbox").hidden = false;
-  location.href = "mailto:" + TEACHER_EMAIL + "?subject=" + encodeURIComponent("Результаты: " + (store.name || "ученик")) + "&body=" + encodeURIComponent(text);
-};
-const ask = document.getElementById("resetask");
-document.getElementById("reset").onclick = () => { ask.hidden = false; };
-document.getElementById("resetno").onclick = () => { ask.hidden = true; };
-document.getElementById("resetyes").onclick = () => { store.res = {}; store.ans = {}; save(); ask.hidden = true; show(location.hash.slice(1)); stats(); };
+
 
 window.addEventListener("pagehide", () => flushers.forEach(f => f()));
 document.addEventListener("visibilitychange", () => { if (document.hidden) flushers.forEach(f => f()); });
