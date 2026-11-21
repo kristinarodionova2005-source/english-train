@@ -107,6 +107,16 @@ body.pdfmode { --bg: #ffffff; --card: #ffffff; --ink: #1d2340; --muted: #5d6585;
 .pdfmode .actions .btn, .pdfmode .rec, .pdfmode .confetti, .pdfmode .hint { display: none !important; }
 .pdfmode .card { margin-bottom: 0; }
 .pagebar .actions { margin-top: 0; }
+.theory { padding: 12px 18px; }
+.theory summary { cursor: pointer; font: 600 15px var(--f-head); }
+.theory .tbody { margin-top: 10px; font-size: 14px; }
+.theory .tbody p { margin: 8px 0; }
+.theory .tbody ul { margin: 6px 0 6px 18px; padding: 0; }
+.theory .tbody li { margin: 3px 0; }
+.theory .tw { overflow-x: auto; margin: 8px 0; }
+.theory table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+.theory th, .theory td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.theory th { background: var(--chip); font-weight: 600; }
 .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
 [hidden]{display:none!important}
@@ -625,6 +635,137 @@ const MODULES = [
 
 [...OLD2].flatMap(exsOf).forEach(e => { if (BANKS[e.id]) e.box = BANKS[e.id]; });
 
+const THEORY = {
+  "video": `<p><b>Как работать с видео.</b></p>
+<ul><li>Сначала прочитай вопросы, потом смотри. Так ты знаешь, что искать.</li>
+<li>Первый раз смотри без остановок: нужен общий смысл.</li>
+<li>Второй раз смотри с текстом (Transcript под видео) и проверяй детали.</li>
+<li>Не нужно понимать каждое слово. Ищи ключевые слова: числа, названия, <i>facilities</i>, <i>hut</i>, <i>hotel</i>.</li></ul>
+<p><b>There is / There are</b> («есть, находится»)</p>
+<div class="tw"><table><tr><th></th><th>Один предмет</th><th>Несколько</th></tr>
+<tr><td>+</td><td>There <b>is</b> a pool.</td><td>There <b>are</b> four courts.</td></tr>
+<tr><td>–</td><td>There <b>isn't</b> a campsite.</td><td>There <b>aren't</b> any shops.</td></tr>
+<tr><td>?</td><td><b>Is there</b> a gym?</td><td><b>Are there</b> any shops?</td></tr></table></div>
+<p>Вопрос с количеством: <i>How many tennis courts are there?</i></p>`,
+
+  "grammar:Choose": `<p><b>Как выбрать время:</b> найди в предложении слова-подсказки и подумай, что происходит: привычка, процесс сейчас, процесс в прошлом, результат.</p>
+<div class="tw"><table><tr><th>Время</th><th>Форма</th><th>Когда</th><th>Подсказки</th></tr>
+<tr><td>Present Simple</td><td>V / V+s</td><td>факты, привычки</td><td>always, usually, every day</td></tr>
+<tr><td>Present Continuous</td><td>am/is/are + V-ing</td><td>происходит сейчас</td><td>now, at the moment, Look!</td></tr>
+<tr><td>Past Simple</td><td>V2 / did</td><td>завершённое действие в прошлом</td><td>yesterday, last week, ago</td></tr>
+<tr><td>Past Continuous</td><td>was/were + V-ing</td><td>процесс в момент в прошлом</td><td>at 8 o'clock, while, all evening</td></tr>
+<tr><td>Past Perfect</td><td>had + V3</td><td>действие раньше другого в прошлом</td><td>before, by the time, already, after</td></tr>
+<tr><td>Present Perfect</td><td>have/has + V3</td><td>опыт, результат к настоящему</td><td>ever, never, just, already, yet, for, since</td></tr></table></div>
+<ul><li>Глаголы состояния (<i>know, like, want, understand, have</i> в значении «иметь») обычно без -ing: <i>I know the answer.</i></li>
+<li>С точным прошлым временем (<i>yesterday, last year, in 2019</i>) нужен Past Simple, а не Present Perfect.</li></ul>`,
+
+  "grammar:Fill in": `<p><b>Формы:</b></p>
+<div class="tw"><table><tr><th>Время</th><th>+</th><th>–</th><th>?</th></tr>
+<tr><td>Past Continuous</td><td>was/were + V-ing</td><td>wasn't / weren't + V-ing</td><td>Was/Were + подлежащее + V-ing?</td></tr>
+<tr><td>Past Perfect</td><td>had + V3</td><td>hadn't + V3</td><td>Had + подлежащее + V3?</td></tr>
+<tr><td>Present Perfect</td><td>have/has + V3</td><td>haven't / hasn't + V3</td><td>Have/Has + подлежащее + V3?</td></tr></table></div>
+<p><b>Третьи формы частых глаголов:</b> be, been · go, gone/been · see, seen · do, done · break, broken · lose, lost · bring, brought · eat, eaten · ride, ridden · write, written · leave, left · make, made · put, put.</p>
+<p><i>never, just, already</i> стоят между <i>have/had</i> и V3: <i>I have never been to Paris.</i></p>`,
+
+  "grammar:Write": `<p><b>when и while</b></p>
+<ul><li><b>While</b> + Past Continuous: длинное действие, <i>While we were driving</i>…</li>
+<li><b>When</b> + Past Simple: короткое действие, которое его прервало, <i>…the car broke down.</i></li>
+<li>Порядок частей можно менять. Если часть первая, ставь запятую: <i>While we were driving, the car broke down.</i></li>
+<li><b>As</b> здесь как <i>while</i>: <i>As Max was running, he dropped his phone.</i></li>
+<li>Два длинных действия одновременно: <i>Mum was cooking while I was putting up the tent.</i></li></ul>
+<p><b>Past Perfect с after / before / by the time:</b> то, что случилось раньше, ставь в Past Perfect: <i>After I had finished my homework, I went out.</i> · <i>By the time we arrived, the shop had closed.</i></p>
+<p><b>Совет для speaking:</b> отвечай полным предложением: <i>At 8 o'clock I was having breakfast.</i></p>`,
+
+  "grammar:Fix": `<p><b>Типичные ошибки, на которые стоит смотреть:</b></p>
+<ul><li><b>since / for</b> требуют Present Perfect: <i>I have lived here since 2019</i> (не <i>am living</i>).</li>
+<li><b>yesterday, last week</b> требуют Past Simple: <i>I lost my keys yesterday.</i></li>
+<li>Глаголы состояния без -ing: <i>He knew the answer</i> (не <i>was knowing</i>).</li>
+<li>После <i>did / didn't</i> глагол в начальной форме: <i>We didn't go.</i></li>
+<li>He / she / it в Present Simple: <i>He goes</i>.</li>
+<li>Порядок слов в вопросе: <i>What were you doing?</i> (не <i>What you were doing?</i>).</li>
+<li>was / were: <i>They were waiting.</i></li>
+<li>Не смешивай два времени в одной части: <i>While I was walking, I saw a friend.</i></li></ul>`,
+
+  "future": `<p><b>Как говорить о будущем</b></p>
+<div class="tw"><table><tr><th>Форма</th><th>Когда</th><th>Пример</th></tr>
+<tr><td><b>will</b> + V</td><td>решение в момент речи, обещание, мнение (<i>I think…</i>)</td><td>I'll get you some water. · I think it will be sunny.</td></tr>
+<tr><td><b>be going to</b> + V</td><td>план, намерение; очевидный признак</td><td>We're going to visit Grandma. · Look at the sky! It's going to rain.</td></tr>
+<tr><td><b>Present Continuous</b></td><td>договорённость, время известно</td><td>We're visiting Grandma on Sunday.</td></tr></table></div>
+<p>Если возможны два варианта (<i>going to</i> и <i>Present Continuous</i> для плана), подойдёт любой.</p>`,
+
+  "vocab:Camping words": `<p><b>Выражения из рассказа про щенка</b></p>
+<div class="tw"><table><tr><th>Выражение</th><th>Значение</th><th>Пример</th></tr>
+<tr><td>look forward to + -ing</td><td>с нетерпением ждать</td><td>I'm looking forward to seeing you.</td></tr>
+<tr><td>at the last minute</td><td>в последний момент</td><td>He booked the tickets at the last minute.</td></tr>
+<tr><td>set off</td><td>отправиться в путь</td><td>We set off at six.</td></tr>
+<tr><td>break down</td><td>сломаться (машина)</td><td>Our bus broke down.</td></tr>
+<tr><td>in the middle of nowhere</td><td>в глуши</td><td>Their house is in the middle of nowhere.</td></tr>
+<tr><td>pull over</td><td>съехать на обочину</td><td>The driver pulled over.</td></tr>
+<tr><td>sort out</td><td>уладить, разобраться</td><td>I'll sort it out.</td></tr>
+<tr><td>be fed up with + -ing</td><td>надоело</td><td>I'm fed up with waiting.</td></tr>
+<tr><td>give someone a lift</td><td>подвезти</td><td>Can you give me a lift?</td></tr>
+<tr><td>make it</td><td>успеть, добраться</td><td>We made it just in time.</td></tr>
+<tr><td>put up (a tent)</td><td>поставить палатку</td><td>They put up a tent.</td></tr>
+<tr><td>get lost</td><td>заблудиться</td><td>Take a map, or you'll get lost.</td></tr>
+<tr><td>run out of</td><td>закончиться (запасы)</td><td>We ran out of milk.</td></tr>
+<tr><td>get along (with)</td><td>ладить</td><td>I get along well with my cousins.</td></tr>
+<tr><td>take someone's breath away</td><td>захватить дух</td><td>The view took my breath away.</td></tr>
+<tr><td>worth it</td><td>стоит того</td><td>It was hard, but worth it.</td></tr></table></div>`,
+
+  "vocab:A day that went wrong": `<p><b>Выражения из рассказа «A Day That Went Wrong»</b></p>
+<div class="tw"><table><tr><th>Выражение</th><th>Значение</th><th>Пример</th></tr>
+<tr><td>in a hurry</td><td>в спешке</td><td>I left in a hurry.</td></tr>
+<tr><td>rush</td><td>спешить</td><td>Don't rush!</td></tr>
+<tr><td>grab</td><td>схватить</td><td>She grabbed her bag.</td></tr>
+<tr><td>throw on</td><td>быстро надеть</td><td>He threw on a coat.</td></tr>
+<tr><td>to make matters worse</td><td>как назло, и вдобавок</td><td>…and to make matters worse, it rained.</td></tr>
+<tr><td>soaking wet</td><td>промокший насквозь</td><td>I came home soaking wet.</td></tr>
+<tr><td>out of breath</td><td>запыхавшийся</td><td>She was out of breath.</td></tr>
+<tr><td>come across</td><td>случайно встретить</td><td>I came across an old friend.</td></tr>
+<tr><td>in trouble</td><td>в неприятностях</td><td>He's in trouble.</td></tr>
+<tr><td>feel relieved</td><td>почувствовать облегчение</td><td>I felt relieved.</td></tr>
+<tr><td>leave behind</td><td>забыть, оставить</td><td>I left my phone behind.</td></tr>
+<tr><td>come up with</td><td>придумать</td><td>She came up with an idea.</td></tr>
+<tr><td>over the moon</td><td>на седьмом небе</td><td>She was over the moon.</td></tr>
+<tr><td>cheer someone up</td><td>поднять настроение</td><td>I bought flowers to cheer her up.</td></tr>
+<tr><td>turn out</td><td>оказаться</td><td>The party turned out well.</td></tr>
+<tr><td>it could be worse</td><td>могло быть и хуже</td><td>I failed one test, but it could be worse.</td></tr></table></div>`,
+
+  "vocab:Both lists": `<p><b>Измени форму выражения по смыслу предложения:</b></p>
+<div class="tw"><table><tr><th>Начальная форма</th><th>Past Simple</th><th>Пример</th></tr>
+<tr><td>set off</td><td>set off</td><td>We set off at dawn.</td></tr>
+<tr><td>break down</td><td>broke down</td><td>The car broke down.</td></tr>
+<tr><td>run out of</td><td>ran out of</td><td>We ran out of petrol.</td></tr>
+<tr><td>come across</td><td>came across</td><td>I came across Tom.</td></tr>
+<tr><td>leave behind</td><td>left behind</td><td>I left my phone behind.</td></tr>
+<tr><td>turn out</td><td>turned out</td><td>It turned out well.</td></tr>
+<tr><td>make it</td><td>made it</td><td>We made it.</td></tr></table></div>
+<ul><li>В Present Simple для he / she / it добавь -s к первому глаголу: <i>The car breaks down.</i></li>
+<li><i>look forward to</i> и <i>be fed up with</i> дальше требуют <b>-ing</b>.</li>
+<li>В speaking используй 3 выражения и скажи, как это было в твоей жизни.</li></ul>`,
+
+  "prep": `<p><b>Время: in, on, at</b></p>
+<div class="tw"><table><tr><th>Предлог</th><th>Когда</th><th>Пример</th></tr>
+<tr><td><b>in</b></td><td>месяцы, годы, времена года, часть дня, «через …»</td><td>in March · in 2020 · in the evening · in five minutes</td></tr>
+<tr><td><b>on</b></td><td>дни недели и даты</td><td>on Monday · on 5 May · on Saturday afternoon</td></tr>
+<tr><td><b>at</b></td><td>точное время, night, weekend (BrE)</td><td>at six o'clock · at night · at the weekend</td></tr></table></div>
+<p><b>Глагол + предлог:</b> wait <b>for</b>, listen <b>to</b>, look <b>for</b> (искать), laugh <b>at</b>, depend <b>on</b>, belong <b>to</b> · be good <b>at</b>, be afraid <b>of</b>, be interested <b>in</b>, be fed up <b>with</b>.</p>
+<p><b>Место и движение:</b> arrive <b>at</b> the campsite · give a lift <b>to</b> the village · walk <b>through</b> the forest · run <b>towards</b> the cottage · put the tent <b>next to</b> the wood · get along <b>with</b> someone · <b>in</b> the end (в конце концов).</p>`,
+
+  "articles": `<div class="tw"><table><tr><th>Артикль</th><th>Когда</th><th>Пример</th></tr>
+<tr><td><b>a / an</b></td><td>предмет упоминается впервые; профессия; <i>an</i> перед гласным звуком</td><td>I saw a dog. · She is a nurse. · an apple, an engineer</td></tr>
+<tr><td><b>the</b></td><td>уже известный предмет; единственный в своём роде; превосходная степень</td><td>The dog was black. · the sun · the best day · Open the window.</td></tr>
+<tr><td><b>без артикля</b></td><td>общее понятие (мн. ч. и неисчисляемые); еда по времени; спорт; <i>go to school / bed</i></td><td>I love music. · have breakfast · play football · go to school</td></tr></table></div>
+<ul><li>С музыкальными инструментами нужен <b>the</b>: <i>play the guitar</i>. С видами спорта артикля нет: <i>play football</i>.</li>
+<li>Если перед существительным стоит <i>my, your, his, her</i>, артикль не нужен: <i>in my bed</i> (не <i>in the my bed</i>).</li>
+<li><i>The weather</i> — всегда с the. <i>At school</i> — без артикля (в смысле «на занятиях»).</li></ul>`
+};
+function theoryCard(html) {
+  const body = h("div", { class: "tbody" });
+  body.innerHTML = html;
+  return h("details", { class: "card theory", open: "" }, h("summary", {}, "Справка"), body);
+}
+
 /* ---------- helpers ---------- */
 const KEY = "english-trainer-v1";
 let store = { name: "", res: {}, ans: {} };
@@ -949,6 +1090,7 @@ function show(id) {
     nodes.push(h("div", { class: "subtabs", role: "tablist" }, gs.map((g, i) => h("button", { type: "button", role: "tab", class: "sub", "aria-selected": String(i === gi), onclick: () => { subSel[m.id] = i; show(m.id); window.scrollTo(0, 0); } }, g.tab))));
     list = gs[gi].ex.filter(exOk);
   } else list = m.ex.filter(exOk);
+  const th = THEORY[m.groups ? m.id + ":" + cur.g : m.id]; if (th) nodes.push(theoryCard(th));
   if (!list.length) nodes.push(h("div", { class: "card" }, "Для этого фильтра заданий нет."));
   view.replaceChildren(...nodes, ...(list.length ? [pageBar()] : []), ...list.map(e => exCard(e, null, m.kind)), ...(list.length ? [pageBar()] : []));
 }
