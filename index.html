@@ -74,6 +74,9 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
 .sumbox textarea { min-height: 150px; font-size: 13px; }
 .rec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .player { width: 100%; margin-top: 10px; }
+.subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+.sub { font: 600 13px var(--f-body); background: var(--card); color: var(--ink); border: 1.5px solid var(--line); border-radius: 99px; padding: 6px 13px; cursor: pointer; }
+.sub[aria-selected=true] { background: var(--accent-soft); border-color: var(--accent); }
 .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
 [hidden]{display:none!important}
@@ -109,7 +112,7 @@ textarea { width: 100%; min-height: 96px; resize: vertical; }
 
 <script>
 const VIDEO_URL = "https://learnenglish.britishcouncil.org/general-english/video-series/starting-out/episode-15-there-campsite";
-const MODULES = [
+const OLD = [
   { id: "video", tab: "Видео", title: "Is there a campsite?",
     lead: { text: "British Council, Starting Out, Episode 15. Посмотри видео два раза: сначала без остановок, потом ещё раз с текстом (под видео на странице есть Transcript).", link: VIDEO_URL, linkText: "Открыть видео" },
     ex: [
@@ -234,6 +237,289 @@ const MODULES = [
       items: [{ q: "What were you doing at 8 o'clock this morning?" }, { q: "What was your family doing yesterday at 7 p.m.?" },
               { q: "What were you doing when your phone rang last time?" }, { q: "Were you looking forward to anything last week? What?" }],
       model: "At 8 o'clock this morning I was having breakfast. Yesterday at 7 p.m. my mum was cooking dinner while my dad was watching TV. When my phone rang, I was doing my homework. Yes, I was looking forward to the weekend because we were going to the lake." }
+    ] }
+];
+
+/* ---------- sections ---------- */
+const byId = id => OLD.flatMap(m => m.ex).find(e => e.id === id);
+const exsOf = m => m.groups ? m.groups.flatMap(g => g.ex) : m.ex;
+const gapEx = (id, title, ins, items, box) => ({ id, type: "gap", title, ins, box, items: items.map(([q, ...a]) => ({ q, a })) });
+const mcqEx = (id, title, ins, items) => ({ id, type: "mcq", title, ins, items: items.map(([q, o, a]) => ({ q, o, a })) });
+const writeEx = (id, title, ins, items) => ({ id, type: "write", title, ins, items: items.map(([q, ...a]) => ({ q, a })) });
+const fixEx = (id, title, ins, items) => ({ id, type: "fix", title, ins, items: items.map(([q, ...a]) => ({ q, a })) });
+const matchEx = (id, title, ins, opts, items) => ({ id, type: "match", title, ins, opts, items: items.map(([q, a]) => ({ q, a })) });
+const CH = "Выбери правильный вариант.";
+
+const MODULES = [
+  OLD[0],
+  { id: "grammar", tab: "Grammar", title: "Времена",
+    lead: { text: "Выбери тему сверху. В каждой теме свои упражнения, они проверяются сразу. В письменных заданиях возможны и другие верные варианты: сравни с образцом." },
+    groups: [
+    { tab: "Past Continuous", ex: [
+      byId("x6"), byId("x7"),
+      gapEx("pc1", "Past Continuous: positive, negative, question", "Впиши глагол в нужной форме или was / were.", [
+        ["At 9 p.m. yesterday Ben ___ (watch) a film.", "was watching"],
+        ["The kids ___ (not / sleep) when I came home.", "weren't sleeping", "were not sleeping"],
+        ["What ___ she doing when you called?", "was"],
+        ["We ___ (walk) along the river when we saw a fox.", "were walking"],
+        ["It ___ (not / snow) in the morning: it was sunny.", "wasn't snowing", "was not snowing"],
+        ["___ they playing tennis at ten o'clock?", "were"],
+        ["I ___ (wait) for the bus when it started to rain.", "was waiting"],
+        ["Max ___ (not / listen) because he was looking at his phone.", "wasn't listening", "was not listening"]]),
+      mcqEx("pc2", "Past Simple or Past Continuous?", CH, [
+        ["Last Sunday we ___ in the forest when we heard a strange noise.", ["walked", "were walking"], 1],
+        ["I ___ the door when the lights went out.", ["opened", "was opening"], 1],
+        ["While Dad ___ the car, Mum made sandwiches.", ["repaired", "was repairing"], 1],
+        ["She ___ her bag and ran to the bus stop.", ["grabbed", "was grabbing"], 0],
+        ["The phone rang while I ___ a shower.", ["took", "was taking"], 1],
+        ["When he ___ the news, he jumped for joy.", ["heard", "was hearing"], 0],
+        ["They ___ football when it began to rain.", ["played", "were playing"], 1],
+        ["He ___ his leg while he was skiing.", ["broke", "was breaking"], 0]]),
+      byId("x9")] },
+    { tab: "Past Perfect", ex: [
+      gapEx("pp1", "Past Perfect: form", "Впиши глагол в Past Perfect (had + третья форма).", [
+        ["When we arrived, the film ___ (already / start).", "had already started"],
+        ["She ___ (not / eat) anything before the exam, so she was hungry.", "hadn't eaten", "had not eaten"],
+        ["By the time Tom called, I ___ (leave) the house.", "had left"],
+        ["They ___ (never / see) snow before their trip to Norway.", "had never seen"],
+        ["___ they finished the work before the boss came?", "had"],
+        ["He felt nervous because he ___ (forget) his notes.", "had forgotten"],
+        ["I realised that I ___ (lose) my wallet.", "had lost"],
+        ["After we ___ (pack) the bags, we left.", "had packed"]]),
+      mcqEx("pp2", "Past Simple or Past Perfect?", CH, [
+        ["When I got to the cinema, the film ___.", ["started", "had started"], 1],
+        ["She was angry because her brother ___ her laptop.", ["broke", "had broken"], 1],
+        ["I locked the door and then ___ to the bus stop.", ["walked", "had walked"], 0],
+        ["By the time the rescuers came, the puppy ___ for two days.", ["was missing", "had been missing"], 1],
+        ["He ___ the exam because he hadn't studied.", ["failed", "had failed"], 0],
+        ["When we arrived, everybody ___ home.", ["went", "had gone"], 1]]),
+      mcqEx("pp3", "Which happened first?", "Выбери действие, которое произошло раньше.", [
+        ["When I came home, my sister had cooked dinner.", ["I came home", "my sister cooked dinner"], 1],
+        ["The film had started when we sat down.", ["the film started", "we sat down"], 0],
+        ["She told me she had met him in Paris.", ["she told me", "she met him"], 1],
+        ["Before he left, he had said goodbye.", ["he left", "he said goodbye"], 1],
+        ["By the time we got up, the sun had risen.", ["we got up", "the sun rose"], 1]]),
+      writeEx("pp4", "Join with after / before / by the time / when", "Одно действие произошло раньше. Используй Past Perfect для него. Напиши предложение целиком.", [
+        ["(after) I / finish / my homework // I / go out", "After I had finished my homework, I went out.", "I went out after I had finished my homework."],
+        ["(by the time) we / arrive // the shop / close", "By the time we arrived, the shop had closed.", "The shop had closed by the time we arrived."],
+        ["(before) she / call // I / already / leave", "Before she called, I had already left.", "I had already left before she called."],
+        ["(when) I / get to the stop // the bus / go", "When I got to the stop, the bus had gone.", "The bus had gone when I got to the stop."]])] },
+    { tab: "Present Perfect", ex: [
+      gapEx("pr1", "Present Perfect or Past Simple?", "Впиши глагол в нужной форме.", [
+        ["I ___ (never / ride) a horse.", "have never ridden"],
+        ["We ___ (visit) Rome last summer.", "visited"],
+        ["She ___ (just / finish) her homework.", "has just finished"],
+        ["___ you ever eaten sushi?", "have"],
+        ["He ___ (live) here since 2020.", "has lived"],
+        ["They ___ (not / see) each other for a week.", "haven't seen", "have not seen"],
+        ["I ___ (lose) my keys yesterday.", "lost"],
+        ["My brother ___ (already / go) to bed.", "has already gone"]]),
+      mcqEx("pr2", "for or since?", CH, [
+        ["I've known her ___ 2019.", ["for", "since"], 1],
+        ["We've been here ___ two hours.", ["for", "since"], 0],
+        ["He has worked here ___ ten years.", ["for", "since"], 0],
+        ["It has rained ___ Monday.", ["for", "since"], 1],
+        ["They've lived in Moscow ___ a long time.", ["for", "since"], 0],
+        ["She hasn't called ___ last week.", ["for", "since"], 1]]),
+      writeEx("pr3", "Make questions", "Составь вопрос в Present Perfect.", [
+        ["you / ever / be / to London", "Have you ever been to London?"],
+        ["she / finish / her project / yet", "Has she finished her project yet?"],
+        ["they / ever / see / a bear", "Have they ever seen a bear?"],
+        ["your brother / already / eat", "Has your brother already eaten?"]])] },
+    { tab: "Future", ex: [
+      gapEx("f1", "will, be going to or Present Continuous?", "Впиши глагол в подходящей форме. Если возможны два варианта, подойдёт любой.", [
+        ["Look at the sky! It ___ (rain).", "is going to rain"],
+        ["\"I'm thirsty.\" \"I ___ (get) you some water.\"", "will get", "'ll get"],
+        ["We ___ (visit) my grandma on Sunday. We've bought the tickets.", "are going to visit", "are visiting"],
+        ["I think she ___ (pass) the exam.", "will pass", "'ll pass"],
+        ["\"There's no milk.\" \"I ___ (buy) some.\"", "will buy", "'ll buy"],
+        ["He ___ (start) university in September: he has already chosen a course.", "is going to start", "is starting"],
+        ["Be careful! You ___ (spill) the tea.", "are going to spill"],
+        ["I think it ___ (be) sunny tomorrow.", "will be", "'ll be"]]),
+      mcqEx("f2", "First conditional", "If + Present Simple, will + глагол. " + CH, [
+        ["If it ___ tomorrow, we will stay at home.", ["rains", "will rain"], 0],
+        ["If you study hard, you ___ the exam.", ["pass", "will pass"], 1],
+        ["I ___ you if you need help.", ["help", "will help"], 1],
+        ["If we miss the bus, we ___ late.", ["will be", "are"], 0],
+        ["We ___ a picnic if the weather is good.", ["have", "will have"], 1],
+        ["When I ___ home, I will call you.", ["get", "will get"], 0]])] },
+    { tab: "Present", ex: [
+      gapEx("ps1", "Present Simple or Present Continuous?", "Впиши глагол в нужной форме.", [
+        ["My dad usually ___ (drive) to work.", "drives"],
+        ["Look! The kids ___ (play) in the garden.", "are playing"],
+        ["I ___ (not / like) coffee.", "don't like", "do not like"],
+        ["What ___ you doing right now?", "are"],
+        ["Water ___ (boil) at 100 degrees.", "boils"],
+        ["We ___ (have) lunch at the moment.", "are having"],
+        ["He ___ (not / work) today: he is on holiday.", "isn't working", "is not working"],
+        ["___ she speak French?", "does"]]),
+      mcqEx("ps2", "Verbs we don't use in Continuous", CH, [
+        ["I ___ the answer.", ["know", "am knowing"], 0],
+        ["She ___ a new bike.", ["has", "is having"], 0],
+        ["We ___ dinner at the moment.", ["have", "are having"], 1],
+        ["This soup ___ delicious.", ["tastes", "is tasting"], 0],
+        ["He ___ about his exam now.", ["thinks", "is thinking"], 1],
+        ["I ___ what you mean.", ["don't understand", "am not understanding"], 0]])] },
+    { tab: "Mixed", ex: [
+      byId("x5"), byId("x8"),
+      gapEx("mx1", "Mixed tenses: a message from the campsite", "Впиши глагол в нужной форме.", [
+        ["I ___ (write) to you from our campsite right now.", "am writing"],
+        ["We ___ (set off) at five o'clock yesterday.", "set off"],
+        ["Dad ___ (hate) being late.", "hates"],
+        ["The car ___ (break down) in the middle of nowhere.", "broke down"],
+        ["While Dad ___ (try) to fix it, I looked at my phone.", "was trying"],
+        ["I realised that my phone ___ (run out of) battery.", "had run out of"],
+        ["Luckily, a farmer ___ (give) us a lift.", "gave"],
+        ["By the time we ___ (make it) to the campsite, it was dark.", "made it"],
+        ["I ___ (never / see) such a beautiful lake.", "have never seen"],
+        ["Tomorrow we ___ (go) hiking. We've planned everything.", "are going to go", "are going"]])] }
+  ] },
+  { id: "vocab", tab: "Vocabulary", title: "Лексика из двух листов",
+    lead: { text: "Первый список: поход и щенок (set off, break down…). Второй список: день, когда всё пошло не так (in a hurry, over the moon…). Третья вкладка объединяет оба." },
+    groups: [
+    { tab: "Camping words", ex: [
+      matchEx("va1", "Expression and meaning", "Выбери значение.",
+        ["to wait for something with pleasure", "very late, just before the deadline", "to begin a journey", "(of a car) to stop working", "very far from any town", "to stop a car at the side of the road", "to find a solution to a problem", "annoyed and bored with something"],
+        [["to look forward to", 0], ["at the last minute", 1], ["to set off", 2], ["to break down", 3], ["in the middle of nowhere", 4], ["to pull over", 5], ["to sort out", 6], ["to be fed up with", 7]]),
+      gapEx("va2", "Complete the sentences", "Впиши выражение в нужной форме.", [
+        ["Our bus ___ on the way to school, so we were late.", "broke down"],
+        ["The driver ___ to check the map.", "pulled over"],
+        ["Can you give me a ___ to the station?", "lift"],
+        ["They ___ a tent near the river.", "put up"],
+        ["Don't worry, I'll ___ the problem.", "sort out"],
+        ["I ___ well with my cousins.", "get along"],
+        ["The view from the top ___.", "took my breath away"],
+        ["We ___ milk this morning.", "ran out of"],
+        ["We finally ___ to the airport just in time.", "made it"],
+        ["He booked the tickets ___.", "at the last minute"]]),
+      gapEx("va3", "Particles", "Впиши недостающее слово: off, over, out, up, down, along.", [
+        ["We set ___ at six in the morning.", "off"],
+        ["The driver pulled ___ at the side of the road.", "over"],
+        ["Don't worry, I'll sort it ___.", "out"],
+        ["I'm fed ___ with this weather.", "up"],
+        ["They put ___ a tent by the river.", "up"],
+        ["We ran ___ of petrol.", "out"],
+        ["I get ___ well with my classmates.", "along"],
+        ["Our car broke ___ in the middle of nowhere.", "down"]])] },
+    { tab: "A day that went wrong", ex: [
+      matchEx("vb1", "Expression and meaning", "Выбери значение.",
+        ["to move or do something very fast", "to take something quickly with your hand", "to put clothes on quickly", "completely wet", "breathing hard after running", "to meet someone by chance", "in a difficult situation, possibly facing punishment", "extremely happy"],
+        [["to rush", 0], ["to grab", 1], ["to throw on", 2], ["soaking wet", 3], ["out of breath", 4], ["to come across", 5], ["in trouble", 6], ["over the moon", 7]]),
+      gapEx("vb2", "Complete the sentences", "Впиши выражение из рамки в нужной форме. Два лишних.", [
+        ["She was ___ when she heard she had won first prize.", "over the moon"],
+        ["I ___ my umbrella on the bus again!", "left behind"],
+        ["He ran up six floors and was completely ___.", "out of breath"],
+        ["We need to ___ a plan before Monday.", "come up with"],
+        ["Guess who I ___ at the cinema yesterday: my old teacher!", "came across"],
+        ["Don't ___ me: I'm still thinking.", "rush"],
+        ["I forgot my keys, and ___, it started to snow.", "to make matters worse", "make matters worse"],
+        ["Her friends tried to ___ her up after she failed the test.", "cheer"],
+        ["The concert ___ to be much better than we expected.", "turned out"],
+        ["He walked home in the rain and arrived ___.", "soaking wet"]],
+        "over the moon · leave behind · out of breath · come up with · come across · rush · to make matters worse · cheer up · turn out · soaking wet · in trouble · grab"),
+      mcqEx("vb3", "Choose the correct expression", CH, [
+        ["I ___ a sandwich and ran to the bus.", ["grabbed", "cheered up"], 0],
+        ["After a long, difficult week, I needed something to ___.", ["cheer me up", "turn me out"], 0],
+        ["I ___ my old teacher in the street yesterday.", ["came across", "came up with"], 0],
+        ["Don't worry about one bad mark: ___.", ["it could be worse", "it turns out"], 0],
+        ["My brother ___ that clearly meant \"be quiet!\".", ["gave me a look", "left me behind"], 0],
+        ["I felt ___ when the teacher said nothing.", ["relieved", "rushed"], 0]]),
+      matchEx("vb4", "Match the halves", "Выбери окончание предложения.",
+        ["the moon when she got the news.", "behind at school.", "me up when I'm sad.", "a sandwich and ran.", "breath after the race.", "out fine in the end.", "worse, I lost my ticket.", "an old friend in the park."],
+        [["I was so late that I grabbed …", 3], ["To make matters …", 6], ["She was over …", 0], ["I came across …", 7], ["He was out of …", 4], ["Everything turned …", 5], ["I left my notebook …", 1], ["My friends always cheer …", 2]])] },
+    { tab: "Both lists", ex: [
+      byId("x4"), byId("x3"),
+      { id: "vc1", type: "speak", title: "Speaking: your opinion", ins: "Выбери одно утверждение и скажи вслух за 1 минуту. Используй 3 выражения из списков и запиши голосовое.",
+        items: [{ q: "It's better to pack the day before than at the last minute." }, { q: "Everybody has a bad day sometimes. It's important to stay positive." }, { q: "Teenagers shouldn't travel without their parents." }],
+        model: "In my opinion, it is better to pack the day before. Last week I packed at the last minute and I left my phone behind. I was in a hurry and I was out of breath when I got to the bus stop. I think it is worth it to get ready early." },
+      { id: "vc2", type: "open", title: "Writing: a day that went wrong", ins: "Напиши 5–6 предложений. Нужно: 6 выражений из списков, 2 предложения в Past Continuous, 1 в Past Perfect.",
+        items: [{ q: "Last Saturday everything went wrong. My alarm clock didn't go off, so…" }],
+        model: "…I woke up in a hurry and ran out of the house. While I was waiting for the bus, it started to rain, and I got soaking wet. When I arrived at school, I realised that I had left my homework behind. I couldn't come up with a good excuse, so I told the truth. My teacher wasn't angry, and in the end the day turned out fine." }] }
+  ] },
+  { id: "prep", tab: "Prepositions", title: "Предлоги",
+    lead: { text: "Время, место, движение и глаголы с предлогами." },
+    ex: [
+      gapEx("p1", "Time: in, on, at", "Впиши in, on или at.", [
+        ["We set off ___ six o'clock.", "at"],
+        ["My birthday is ___ March.", "in"],
+        ["See you ___ Monday!", "on"],
+        ["He was born ___ 2010.", "in"],
+        ["We always visit Grandma ___ the weekend.", "at", "on"],
+        ["The film starts ___ the evening.", "in"],
+        ["Do you work ___ night?", "at"],
+        ["We had a picnic ___ Saturday afternoon.", "on"],
+        ["Winter starts ___ December.", "in"],
+        ["I'll call you ___ five minutes.", "in"]]),
+      mcqEx("p2", "Place and movement", CH, [
+        ["We walked ___ the forest for an hour.", ["through", "across", "over"], 0],
+        ["The puppy ran ___ the cottage.", ["towards", "between", "above"], 0],
+        ["Put the tent ___ the tree.", ["next to", "among", "along"], 0],
+        ["She was standing ___ the garden, crying.", ["in", "on", "at"], 0],
+        ["We arrived ___ the campsite just before dark.", ["to", "at", "in"], 1],
+        ["The cat is sleeping ___ the sofa.", ["on", "at", "by"], 0],
+        ["We cycled ___ the river.", ["along", "between", "in"], 0],
+        ["They jumped ___ the lake.", ["into", "onto", "through"], 0]]),
+      gapEx("p3", "Verb + preposition", "Впиши предлог.", [
+        ["I'm waiting ___ the bus.", "for"],
+        ["She is good ___ drawing.", "at"],
+        ["Listen ___ me!", "to"],
+        ["He's afraid ___ dogs.", "of"],
+        ["We are interested ___ history.", "in"],
+        ["This book belongs ___ me.", "to"],
+        ["I'm looking ___ my phone. I can't find it.", "for"],
+        ["They laughed ___ his joke.", "at"],
+        ["It depends ___ the weather.", "on"],
+        ["I'm fed up ___ this noise.", "with"]]),
+      fixEx("p4", "Find and fix the preposition mistake", "Исправь предложение прямо в поле и перепиши его целиком.", [
+        ["We arrived to the campsite late.", "We arrived at the campsite late."],
+        ["I'm interested on music.", "I'm interested in music.", "I am interested in music."],
+        ["She is good in maths.", "She is good at maths."],
+        ["We are waiting the bus.", "We are waiting for the bus."],
+        ["He is afraid from spiders.", "He is afraid of spiders."],
+        ["My birthday is at May.", "My birthday is in May."]]),
+      gapEx("p5", "A trip: prepositions in a story", "Впиши предлог.", [
+        ["We set off ___ Saturday morning.", "on"],
+        ["The van broke down ___ the middle of nowhere.", "in"],
+        ["A farmer gave us a lift ___ the nearest village.", "to"],
+        ["We walked ___ the forest for an hour.", "through"],
+        ["We put up our tents ___ to a small wood.", "next"],
+        ["Ruby ran ___ an old cottage.", "towards", "to"],
+        ["We got along well ___ her grandson.", "with"],
+        ["It was hard, but it was worth it ___ the end.", "in"]])
+    ] },
+  { id: "articles", tab: "Articles", title: "Артикли",
+    lead: { text: "a / an / the или без артикля. Правило: первое упоминание, a; повторное и единственное в своём роде, the; общее понятие, без артикля." },
+    ex: [
+      mcqEx("ar1", "a, an, the or no article?", CH, [
+        ["I have ___ idea.", ["a", "an", "the", "no article"], 1],
+        ["___ sun rises in the east.", ["A", "The", "No article"], 1],
+        ["She plays ___ guitar.", ["a", "the", "no article"], 1],
+        ["We had ___ breakfast at eight.", ["a", "the", "no article"], 2],
+        ["He is ___ engineer.", ["a", "an", "the"], 1],
+        ["I saw a dog in the street. ___ dog was black.", ["A", "The", "No article"], 1],
+        ["They go to ___ school by bus.", ["a", "the", "no article"], 2],
+        ["This is ___ best day of my life.", ["a", "the", "no article"], 1]]),
+      mcqEx("ar2", "Articles in a story", CH, [
+        ["We stopped at ___ big shop.", ["a", "the", "no article"], 0],
+        ["After that we drove to ___ beach.", ["a", "the", "no article"], 1],
+        ["___ weather was beautiful.", ["A", "The", "No article"], 1],
+        ["My mum was cooking ___ apple pie.", ["a", "an", "the"], 1],
+        ["I was sleeping in ___ my bed.", ["a", "the", "no article"], 2],
+        ["I'm fed up with my problems at ___ school.", ["a", "the", "no article"], 2]]),
+      fixEx("ar3", "Find and fix the article mistake", "Исправь предложение прямо в поле и перепиши его целиком.", [
+        ["I have a breakfast at eight.", "I have breakfast at eight."],
+        ["He wants to be the doctor.", "He wants to be a doctor."],
+        ["I love the music.", "I love music."],
+        ["My brother plays the football.", "My brother plays football."],
+        ["Moscow is a capital of Russia.", "Moscow is the capital of Russia."],
+        ["I saw the strange bird yesterday.", "I saw a strange bird yesterday."]]),
+      mcqEx("ar4", "First and second mention", CH, [
+        ["There is a cat in the garden. ___ cat is black.", ["A", "The", "No article"], 1],
+        ["She is ___ tallest girl in the class.", ["a", "the", "no article"], 1],
+        ["I love ___ pizza.", ["a", "the", "no article"], 2],
+        ["My sister is ___ nurse.", ["a", "an", "the"], 0],
+        ["Can you open ___ window? It's hot.", ["a", "the", "no article"], 1],
+        ["We live in ___ small flat.", ["a", "an", "the"], 0]])
     ] }
 ];
 
@@ -450,15 +736,22 @@ function exCard(ex) {
   build(); paint();
   return card;
 }
+const subSel = {};
 function show(id) {
   const m = MODULES.find(x => x.id === id) || MODULES[0];
   [...tabs.children].forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === m.id)));
   const lead = h("section", { class: "card lead" }, h("h2", {}, m.title), h("p", {}, m.lead.text));
   if (m.lead.link) lead.append(h("div", {}, h("a", { class: "btn", href: m.lead.link, target: "_blank", rel: "noopener" }, m.lead.linkText + " ↗")));
-  view.replaceChildren(lead, ...m.ex.map(exCard));
+  const nodes = [lead]; let list = m.ex;
+  if (m.groups) {
+    const gi = subSel[m.id] || 0;
+    nodes.push(h("div", { class: "subtabs", role: "tablist" }, m.groups.map((g, i) => h("button", { type: "button", role: "tab", class: "sub", "aria-selected": String(i === gi), onclick: () => { subSel[m.id] = i; show(m.id); window.scrollTo(0, 0); } }, g.tab))));
+    list = m.groups[gi].ex;
+  }
+  view.replaceChildren(...nodes, ...list.map(exCard));
 }
 function stats() {
-  const all = MODULES.flatMap(m => m.ex).filter(scored);
+  const all = MODULES.flatMap(exsOf).filter(scored);
   const done = all.filter(e => store.res[e.id]).length;
   const pts = all.reduce((s, e) => s + (store.res[e.id] ? store.res[e.id].c : 0), 0);
   const max = all.reduce((s, e) => s + totalOf(e), 0);
@@ -479,7 +772,7 @@ const TEACHER_EMAIL = "kristina.rodionova.2005@gmail.com";
 function summaryText() {
   const s = stats(); const d = new Date();
   const lines = [`Результаты: ${store.name || "ученик"}, ${d.toLocaleDateString("ru-RU")}`, `Выполнено ${s.done} из ${s.all.length}, баллы ${s.pts} из ${s.max}`, ""];
-  MODULES.forEach(m => { lines.push(m.title + ":"); m.ex.filter(scored).forEach(e => { const r = store.res[e.id]; lines.push(`  ${e.title}: ${r ? r.c + "/" + r.t : "не выполнено"}`); }); });
+  MODULES.forEach(m => { lines.push(m.title + ":"); exsOf(m).filter(scored).forEach(e => { const r = store.res[e.id]; lines.push(`  ${e.title}: ${r ? r.c + "/" + r.t : "не выполнено"}`); }); });
   return lines.join("\n");
 }
 document.getElementById("dlres").onclick = () => {
